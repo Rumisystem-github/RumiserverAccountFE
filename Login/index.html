@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>ログイン</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+
+		<STYLE>
+			body{
+				background: var(--RSV_DEFAULT_BG);
+				width: 100vw;
+				height: 100vh;
+			}
+
+			.PLATE{
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+
+			.PLATE > .FIELD{
+				width: 100%;
+			}
+
+			.PLATE > .FIELD > input{
+				width: 100%;
+				height: 26px;
+			}
+
+			.PLATE > .FIELD > div > *{
+				height: 26px;
+			}
+
+			.PLATE > .FIELD > div > button{
+				width: 26px;
+				padding: 0px;
+			}
+
+			.PLATE > hr{
+				margin-top: 20px;
+				margin-bottom: 20px;
+			}
+
+			.PASSWORD_VIEW_BTN{
+				background-size: contain;
+			}
+
+			.USER_PASSWORD[type="text"] + .PASSWORD_VIEW_BTN{
+				background-image: url("MdiEyeOutline.svg");
+			}
+
+			.USER_PASSWORD[type="password"] + .PASSWORD_VIEW_BTN{
+				background-image: url("MdiEyeOffOutline.svg");
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<DIV CLASS="PLATE">
+			<H3>ログイン</H3>
+
+			<DIV CLASS="FIELD">
+				<INPUT TYPE="TEXT" ID="USER_ID" PLACEHOLDER="ユーザーID">
+
+				<DIV STYLE="display: flex; flex-direction: row; width: 100%;">
+					<INPUT TYPE="PASSWORD" CLASS="USER_PASSWORD" ID="USER_PASSWORD" PLACEHOLDER="パスワード">
+					<BUTTON CLASS="PASSWORD_VIEW_BTN" onclick="swtich_password_view();"></BUTTON>
+				</DIV>
+			</DIV>
+
+			<CENTER>
+				<BUTTON onclick="login();">ログイン</BUTTON>
+				<BR>
+				<SPAN onclick="forget_password();" STYLE="color: gray; cursor: pointer;">パスワードをわすれました</SPAN>
+			</CENTER>
+
+			<HR>
+
+			<CENTER>
+				<A HREF="/regist/meow">アカウント作る</A>
+			</CENTER>
+		</DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST" defer></SCRIPT>
+	<SCRIPT defer>
+		const redirect_table = {
+			"ilanes": "https://ilanes.rumiserver.com/",
+			"ilanes_admin": "https://ilanes.rumiserver.com/admin/",
+			"storage": "https://storage.rumiserver.com/",
+			"rumichat": "https://chat.rumiserver.com/",
+			"welcome": "https://account.rumiserver.com/welcome"
+		};
+
+		let dialog = null;
+		let totp_code = null;
+		let mel = {
+			field: {
+				id: document.getElementById("USER_ID"),
+				password: document.getElementById("USER_PASSWORD")
+			}
+		};
+
+		window.addEventListener("load", (e)=>{
+			dialog = new DIALOG_SYSTEM();
+		});
+
+		function swtich_password_view() {
+			if (mel.field.password.type == "password") {
+				mel.field.password.type = "text";
+			} else {
+				mel.field.password.type = "password";
+			}
+		}
+
+		async function login() {
+			const l = dialog.SHOW_LOAD();
+			let ajax = await fetch("https://account.rumiserver.com/api/Session", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Accept": "application/json"
+				},
+				body: JSON.stringify({
+					"UID": mel.field.id.value,
+					"PASS": mel.field.password.value,
+					"TOTP": totp_code
+				})
+			});
+
+			const result = await ajax.json();
+			if (result.STATUS == false) {
+				dialog.CLOSE_LOAD(l);
+				if (result.ERROR.CODE == "0x5000") {
+					dialog.DIALOG("システムエラー");
+					return;
+				}
+
+				dialog.DIALOG("ログインできません。\n\n" + result.ERROR.MESSAGE + ":" + result.ERROR.TRACE);
+				return;
+			}
+
+			//他のログイン情報を要求しているか？
+			if (result.SESSION_ID == null) {
+				switch (result.REQUEST) {
+					case "TOTP":
+						const totp_input = await dialog.INPUT("二段階認証が有効になっています", {TYPE: "TEXT", NAME:"例:123456"});
+						if (totp_input == null) return;
+						totp_code = totp_input;
+						await login();
+						return;
+				}
+			}
+
+			//クッキーにセッションを登録
+			let cookie_date = new Date();
+			cookie_date.setTime(cookie_date.getTime() + 400 * 24 * 60 * 60 * 1000);
+			document.cookie = `SESSION=${result.SESSION_ID}; path=/; domain=rumiserver.com; expires=${cookie_date.toUTCString()}; Secure`;
+
+			//リダイレクトする
+			const redirect_select = url_param_parser(window.location.search)["rd"];
+			if (redirect_select == null) {
+				window.location.href = "/";
+			} else {
+				if (redirect_table[redirect_select] != null) {
+					window.location.href = redirect_table[redirect_select];
+				} else {
+					window.location.href = redirect_select;
+				}
+			}
+		}
+
+		function url_param_parser(url){
+			try{
+				let result = {};
+				const split = url.split("?")[1].split("&");
+				for (let I = 0; I < split.length; I++) {
+					const key = split[I].split("=")[0];
+					const val = split[I].split("=")[1];
+
+					result[key] = val;
+				}
+				return result;
+			}catch(ex){
+				return {};
+			}
+		}
+
+		async function forget_password() {
+			let user_id = null;
+
+			if (mel.field.id.value == "") {
+				user_id = await dialog.INPUT("ユーザーIDは？", {TYPE:"TEXT", NAME:""});
+			} else {
+				user_id = mel.field.id.value;
+			}
+
+			if (user_id == null) return;
+
+			window.location.href = "https://account.rumiserver.com/passreset?UID=" + user_id;
+		}
+	</SCRIPT>
+</HTML>

@@ -1,0 +1,24 @@
+.PROFILE_PAGE{
+	margin: 10px;
+}
+
+.PROFILE_FIELD > div{
+	display: flex;
+	flex-direction: row;
+}
+
+.PROFILE_FIELD > div > .ICON{
+	width: 45px;
+	height: 45px;
+}
+
+.PROFILE_FIELD > div > input{
+	width: 100%;
+}
+
+.PROFILE_FIELD > textarea{
+	margin-top: 5px;
+
+	width: 100%;
+	height: calc(var(--DISPLAY_HEIGHT) - 170px);
+}

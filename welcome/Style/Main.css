@@ -1,0 +1,50 @@
+:root{
+	--DISPLAY_WIDTH: 400px;
+	--DISPLAY_HEIGHT: 300px;
+}
+
+body{
+	background: var(--RSV_DEFAULT_BG);
+	width: 100vw;
+	height: 100vh;
+}
+
+.PLATE{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	padding: 0px;
+
+	width: var(--DISPLAY_WIDTH);
+	height: var(--DISPLAY_HEIGHT);
+
+	overflow: hidden;
+}
+
+.PLATE > div{
+	position: absolute;
+
+	width: var(--DISPLAY_WIDTH);
+	height: var(--DISPLAY_HEIGHT);
+
+	padding: 20px;
+
+	transition: 0.5s;
+}
+
+.PLATE > div[data-status="open"]{
+	top: 0px;
+	left: 0px;
+}
+
+.PLATE > div[data-status="hide"]{
+	top: 0px;
+	left: var(--DISPLAY_WIDTH);
+}
+
+.PLATE > div[data-status="close"]{
+	top: 0px;
+	left: calc(var(--DISPLAY_WIDTH) * -1);
+}

@@ -1,0 +1,38 @@
+body{
+	background: var(--RSV_DEFAULT_BG);
+
+	background-attachment: fixed;
+}
+
+/*ダイアログ*/ 
+.MAIN{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	background-color: white;
+
+	/*画面の大きさによって変わるサイズ*/
+	width: calc(100vw / 3);
+	height: calc(100vw / 3 + 100px);
+
+	/*最小サイズ*/
+	min-width: 342px;
+	min-height: 442px;
+
+	/*最大サイズ*/
+	max-width: 423px;
+	max-height: 523px;
+
+	/*影*/
+	-moz-box-shadow: 10px 10px 43px -12px rgba(0, 0, 0, 0.8);
+	-webkit-box-shadow: 11px 10px 43px -12px rgba(0, 0, 0, 0.8);
+	-ms-box-shadow: 10px 10px 43px -12px rgba(0, 0, 0, 0.8);
+	box-shadow: 10px 10px 43px -12px rgba(0, 0, 0, 0.8);
+
+	/*スクロール*/
+	overflow: hidden;
+
+	padding: 10px;
+}

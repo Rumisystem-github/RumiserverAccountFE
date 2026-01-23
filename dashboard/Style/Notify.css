@@ -1,0 +1,41 @@
+.NOTIFY_LIST{
+	margin-top: 10px;
+
+	overflow: auto;
+
+	height: calc(100% - 250px);
+}
+
+.NOTIFY_ITEM{
+	position: relative;
+
+	width: 100%;
+
+	overflow: hidden;
+
+	margin-bottom: 10px;
+}
+
+.NOTIFY_ITEM > .SERVICE{
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.NOTIFY_ITEM > .SERVICE > img{
+	width: 45px;
+	height: 45px;
+
+	vertical-align: text-top;
+}
+
+.NOTIFY_ITEM > .SERVICE > span{
+	margin-left: 10px;
+}
+
+.NOTIFY_ITEM > .TEXT{
+	position: absolute;
+	top: 22px;
+	left: calc(45px + 10px);
+}

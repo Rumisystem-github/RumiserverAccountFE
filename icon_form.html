@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>アイコン変更フォーム</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+
+		<STYLE>
+			body{
+				margin: 10px;
+			}
+
+			.MAIN{
+				display: flex;
+
+				background-color: white;
+
+				padding: 10px;
+				box-sizing: border-box;
+			}
+
+			.DISPLAY{
+				width: 256px;
+				height: 256px;
+
+				border: solid 1px;
+
+				background-color: white;
+			}
+
+			.CONTROLE{
+				margin-left: 10px;
+			}
+
+			.INPUT_FIELD{
+				display: flex;
+				flex-direction: row;
+			}
+
+			.INPUT_FIELD > span{
+				width: 1em;
+				text-align: center;
+			}
+
+			.INPUT_FIELD > input{
+				width: 320px;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<DIV CLASS="WAIT" ID="WAIT">
+			お待ち下さい...
+		</DIV>
+		<DIV CLASS="MAIN" ID="MAIN" STYLE="display: none;">
+			<CANVAS CLASS="DISPLAY" ID="DISPLAY"></CANVAS>
+
+			<DIV CLASS="CONTROLE">
+				<DIV>
+					<INPUT TYPE="FILE" onchange="open_file(this.files[0]); reset();">
+				</DIV>
+				<DIV>
+					<BUTTON onclick="reset(); draw();">リセット</BUTTON>
+					<INPUT TYPE="CHECKBOX" ID="INPUT_GUIDE" onchange="draw();" checked> <LABEL FOR="INPUT_GUIDE">ガイドを表示</LABEL>
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>X</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_X" VALUE="0" onchange="draw(); save_setting_to_sql();">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>Y</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_Y" VALUE="0" onchange="draw(); save_setting_to_sql();">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>W</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_W" VALUE="0" onchange="draw(); save_setting_to_sql();">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>H</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_H" VALUE="0" onchange="draw(); save_setting_to_sql();">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<BUTTON onclick="apply();">適用</BUTTON>
+				</DIV>
+			</DIV>
+		</DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT defer>
+		const target_width = 256;
+		const target_height = 256;
+		const DB_NAME = "rsv-icon-form";
+		const DB_IMAGE_TABLE_NAME = "image";
+		const DB_SETTING_TABLE_NAME = "setting";
+
+		let dialog = new DIALOG_SYSTEM();
+		let mouse_click = false;
+		let image = new Image();
+		let session = null;
+		let mel = {
+			wait: document.getElementById("WAIT"),
+			main: document.getElementById("MAIN"),
+			display: document.getElementById("DISPLAY"),
+			ctx: document.getElementById("DISPLAY").getContext("2d"),
+			controle: {
+				draw_guide: document.getElementById("INPUT_GUIDE"),
+				x: document.getElementById("INPUT_X"),
+				y: document.getElementById("INPUT_Y"),
+				w: document.getElementById("INPUT_W"),
+				h: document.getElementById("INPUT_H")
+			}
+		};
+
+		//初期化
+		window.addEventListener("load", async (e)=>{
+			//キャンバスを初期化
+			mel.display.width = target_width;
+			mel.display.height = target_height;
+
+			//値を初期化
+			mel.controle.x.value = 0;
+			mel.controle.y.value = 0;
+			mel.controle.w.value = 0;
+			mel.controle.h.value = 0;
+
+			//ログイン
+			session = ReadCOOKIE().SESSION;
+			if (session == null) {
+				window.location.href = "/";
+				return;
+			}
+			const self_user = await LOGIN(session);
+			if (self_user == false) {
+				window.location.href = "/";
+				return;
+			}
+
+			//DB初期化
+			await init_sql();
+
+			//SQLから画像を呼び出す(画像があるなら)
+			const file = await get_file_from_sql();
+			if (file != null) {
+				await load_file(file);
+
+				//SQLから前の設定を呼び出す
+				await load_setting_from_sql();
+			}
+
+			mel.wait.style.display = "none";
+			mel.main.style.display = "flex";
+		});
+
+		//マウスクリック
+		mel.display.addEventListener("mouseup", (e)=>{
+			mouse_click = false;
+		});
+		mel.display.addEventListener("mousedown", (e)=>{
+			mouse_click = true;
+		});
+		mel.display.addEventListener("mouseleave", (e)=>{
+			mouse_click = false;
+		});
+
+		//移動
+		mel.display.addEventListener("mousemove", (e)=>{
+			if (mouse_click == false) return;
+			mel.controle.x.value = Number.parseInt(mel.controle.x.value) + e.movementX;
+			mel.controle.y.value = Number.parseInt(mel.controle.y.value) + e.movementY;
+
+			save_setting_to_sql();
+			draw();
+		})
+
+		//ホイール
+		mel.display.addEventListener("wheel", (e)=>{
+			const zoom_bairicu = (e.deltaY / 4) * -1;
+
+			const x = Number.parseInt(mel.controle.x.value);
+			const y = Number.parseInt(mel.controle.y.value);
+			const w = Number.parseInt(mel.controle.w.value);
+			const h = Number.parseInt(mel.controle.h.value);
+
+			const target_x = target_width / 2;
+			const target_y = target_height / 2;
+			const target_soutai_x = (target_x - x) / w;
+			const target_soutai_y = (target_y - y) / h;
+
+			const new_w = w + zoom_bairicu;
+			const new_h = icon_hiricu_calc(image.width, image.height, new_w);
+			const new_x = target_x - (target_soutai_x * new_w);
+			const new_y = target_y - (target_soutai_y * new_h);
+
+			mel.controle.x.value = Math.floor(new_x);
+			mel.controle.y.value = Math.floor(new_y);
+			mel.controle.w.value = Math.floor(new_w);
+			mel.controle.h.value = Math.floor(new_h);
+
+			save_setting_to_sql();
+			draw();
+		});
+
+		//画像ロード
+		image.addEventListener("load", (e)=>{
+			draw();
+		});
+
+		function open_file(file) {
+			load_file(file);
+			save_file_to_sql(file);
+		}
+
+		//ファイル選択
+		function load_file(file) {
+			if (file == null) return;
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				image.src = reader.result;
+			}
+			reader.readAsDataURL(file);
+		}
+
+		//位置とサイズをリセット
+		function reset() {
+			mel.controle.w.value = target_width;
+
+			const original_width = image.width;
+			const original_height = image.height;
+			const aspect_ratio = original_width / original_height;
+
+			const new_width = Number.parseInt(mel.controle.w.value);
+			const new_height = icon_hiricu_calc(original_width, original_height, new_width);
+			const new_x = Number.parseInt(mel.controle.x.value);
+			const new_y = Math.floor((target_width - new_height) / 2);
+
+			mel.controle.x.value = new_x;
+			mel.controle.y.value = new_y;
+			mel.controle.w.value = new_width;
+			mel.controle.h.value = new_height;
+		}
+
+		//比率を計算して高さを出す
+		function icon_hiricu_calc(original_w, original_h, target_w) {
+			return Math.floor(target_w / (original_w / original_h));
+		}
+
+		//描画
+		function draw() {
+			mel.ctx.clearRect(0, 0, target_width, target_height);
+
+			const x = Number.parseInt(mel.controle.x.value);
+			const y = Number.parseInt(mel.controle.y.value);
+			const w = Number.parseInt(mel.controle.w.value);
+			const h = Number.parseInt(mel.controle.h.value);
+
+			//画像を描画
+			mel.ctx.drawImage(image, x, y, w, h);
+
+			if (mel.controle.draw_guide.checked) {
+				//画像のガイド
+				mel.ctx.strokeStyle = "red";
+				mel.ctx.strokeRect(x - 1, y - 1, w + 1, h + 1);
+
+				//キャンバスの中央
+				mel.ctx.strokeStyle = "black";
+				mel.ctx.lineWidth = 1;
+				mel.ctx.beginPath();
+				mel.ctx.moveTo(target_width / 2, 0);
+				mel.ctx.lineTo(target_width / 2, target_height);
+				mel.ctx.moveTo(0, target_height / 2);
+				mel.ctx.lineTo(target_width, target_height / 2);
+				mel.ctx.stroke();
+			}
+		}
+
+		async function apply() {
+			//描画
+			const x = Number.parseInt(mel.controle.x.value);
+			const y = Number.parseInt(mel.controle.y.value);
+			const w = Number.parseInt(mel.controle.w.value);
+			const h = Number.parseInt(mel.controle.h.value);
+			mel.ctx.fillStyle = "white";
+			mel.ctx.fillRect(0, 0, target_width, target_height);
+			mel.ctx.drawImage(image, x, y, w, h);
+
+			//ロード
+			const l = dialog.SHOW_LOAD();
+			const data_url = mel.display.toDataURL();
+			const base64_data = data_url.split(",")[1];
+			const binary_data = atob(base64_data);
+
+			//バイト配列に変換
+			const byte_array = new Uint8Array(binary_data.length);
+			for (let i = 0; i < binary_data.length; i++) {
+				byte_array[i] = binary_data.charCodeAt(i);
+			}
+
+			let ajax = await fetch("/api/Icon", {
+				method: "POST",
+				headers: {
+					TOKEN: session,
+					"Accept": "application/json"
+				},
+				body: byte_array
+			});
+			const result = await ajax.json();
+			dialog.CLOSE_LOAD(l);
+
+			if (result.STATUS) {
+				window.parent.__update_icon_success();
+			} else {
+				window.parent.__update_icon_failed();
+			}
+		}
+
+		async function init_sql() {
+			return new Promise((resolve, reject) => {
+				let r = indexedDB.open(DB_NAME, 1);
+				r.onupgradeneeded = function(e) {
+					const db = e.target.result;
+					db.createObjectStore(DB_IMAGE_TABLE_NAME);
+					db.createObjectStore(DB_SETTING_TABLE_NAME);
+				};
+
+				r.onsuccess = function(e) {
+					resolve();
+				}
+			});
+		}
+
+		async function get_file_from_sql() {
+			return new Promise((resolve, reject) => {
+				let r = indexedDB.open(DB_NAME, 1);
+
+				r.onsuccess = function(e) {
+					const db = e.target.result;
+					const tx = db.transaction(DB_IMAGE_TABLE_NAME, "readonly");
+					const store = tx.objectStore(DB_IMAGE_TABLE_NAME);
+					const get = store.get("image");
+					get.onsuccess = function() {
+						const file = get.result;
+						resolve(file);
+					}
+				}
+			});
+		}
+
+		async function save_file_to_sql(file) {
+			return new Promise((resolve, reject) => {
+				let r = indexedDB.open(DB_NAME, 1);
+				r.onsuccess = function(e) {
+					const db = e.target.result;
+					const tx = db.transaction(DB_IMAGE_TABLE_NAME, "readwrite");
+					const store = tx.objectStore(DB_IMAGE_TABLE_NAME);
+					store.put(file, "image");
+					resolve();
+				}
+			});
+		}
+
+		async function load_setting_from_sql() {
+			return new Promise((resolve, reject) => {
+				let r = indexedDB.open(DB_NAME, 1);
+
+				r.onsuccess = function(e) {
+					const db = e.target.result;
+					const tx = db.transaction(DB_SETTING_TABLE_NAME, "readonly");
+					const store = tx.objectStore(DB_SETTING_TABLE_NAME);
+					const get = store.get("setting");
+					get.onsuccess = function() {
+						const setting = get.result;
+
+						mel.controle.x.value = setting.x;
+						mel.controle.y.value = setting.y;
+						mel.controle.w.value = setting.w;
+						mel.controle.h.value = setting.h;
+						draw();
+
+						resolve();
+					}
+				}
+			});
+		}
+
+		async function save_setting_to_sql() {
+			return new Promise((resolve, reject) => {
+				let r = indexedDB.open(DB_NAME, 1);
+				r.onsuccess = function(e) {
+					const db = e.target.result;
+					const tx = db.transaction(DB_SETTING_TABLE_NAME, "readwrite");
+					const store = tx.objectStore(DB_SETTING_TABLE_NAME);
+
+					store.put({
+						x: Number.parseInt(mel.controle.x.value),
+						y: Number.parseInt(mel.controle.y.value),
+						w: Number.parseInt(mel.controle.w.value),
+						h: Number.parseInt(mel.controle.h.value)
+					}, "setting");
+
+					resolve();
+				}
+			});
+		}
+	</SCRIPT>
+</HTML>

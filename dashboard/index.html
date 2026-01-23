@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>るみさーばーアカウント</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/icon.css">
+
+		<LINK REL="stylesheet" HREF="Style/Main.css">
+		<LINK REL="stylesheet" HREF="Style/ProfileEditor.css">
+		<LINK REL="stylesheet" HREF="Style/Notify.css">
+	</HEAD>
+	<BODY>
+		<!--サイドのやつ-->
+		<DIV CLASS="SIDE">
+			<DIV CLASS="TITLE">るみさーばーアカウント</DIV>
+			<HR>
+			<DIV CLASS="DESCRIPTION">ここでアカウントの情報を見れます</DIV>
+		</DIV>
+
+		<!--メイン-->
+		<DIV CLASS="MAIN">
+			<!--ユーザー名-->
+			<DIV CLASS="PLATE USER">
+				<IMG ID="USER_ICON">
+				<SPAN ID="USER_NAME"></SPAN>
+			</DIV>
+			<!--フォローワー数-->
+			<DIV CLASS="FOLLOW_COUNT_DISPLAY">
+				<DIV CLASS="PLATE FOLLOWED">
+					フォロー<SPAN ID="FOLLOWED_COUNT"></SPAN>匹
+				</DIV>
+				<DIV CLASS="PLATE FOLLOWER">
+					フォロワー<SPAN ID="FOLLOWER_COUNT"></SPAN>匹
+				</DIV>
+			</DIV>
+			<!--操作-->
+			<DIV CLASS="PLATE">
+				<BUTTON ID="PROFILE_EDIT_BUTTON">プロフィール編集</BUTTON>
+				<A HREF="/secure/"><BUTTON>セキュリティ設定</BUTTON></A>
+			</DIV>
+			<!--通知-->
+			<DIV CLASS="PLATE NOTIFY_LIST" ID="NOTIFY_LIST"></DIV>
+		</DIV>
+
+		<!--プロフィール編集-->
+		<DIV CLASS="PROFILE_EDITOR_BG" ID="PROFILE_EDITOR_BG" onclick="close_profile_editor();" STYLE="display: none;"></DIV>
+		<DIV CLASS="PLATE PLATE_CENTER PROFILE_EDITOR" ID="PROFILE_EDITOR" STYLE="display: none;">
+			<DIV>
+				<IMG ID="PROFILE_ICON" onclick="open_icon_editor();">
+				<INPUT TYPE="TEXT" ID="PROFILE_NAME" PLACEHOLDER="なまえ">
+			</DIV>
+			<TEXTAREA ID="PROFILE_DESCRIPTION" PLACEHOLDER="自己紹介"></TEXTAREA>
+			<BUTTON onclick="profile_apply();">適用</BUTTON>
+		</DIV>
+
+		<!--アイコン編集-->
+		<DIV CLASS="PLATE PLATE_CENTER ICON_EDITOR" ID="ICON_EDITOR" STYLE="display: none;">
+			<IFRAME SRC="/icon_form.html"></IFRAME>
+		</DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="Script/Main.js" defer></SCRIPT>
+	<SCRIPT SRC="Script/ProfileEditor.js" defer></SCRIPT>
+</HTML>

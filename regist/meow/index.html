@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>アカウント作成</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+
+		<STYLE>
+			body{
+				background: var(--RSV_DEFAULT_BG);
+				width: 100vw;
+				height: 100vh;
+			}
+
+			.PLATE{
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+
+				display: flex;
+
+				overflow: hidden;
+
+				padding: 0px;
+
+				width: fit-content;
+				height: 50%;
+
+				transition: 0.5s;
+			}
+
+			/*閉じる*/
+			.PLATE[data-close="true"] {
+				height: 0px;
+				border-width: 0px;
+			}
+
+			.PLATE > .FIELD{
+				width: 300px;
+
+				background-color: transparent;
+
+				margin: 1em;
+
+				overflow-y: auto;
+				overflow-x: hidden;
+			}
+
+			.PLATE > .SIDE{
+				width: 300px;
+
+				background-color: white;
+
+				padding: 1em;
+
+				border-top-left-radius: 10px;
+				border-bottom-left-radius: 10px;
+
+				display: flex;
+				flex-direction: column;
+			}
+
+			/*-----------------------------------------------------登録ページ-----------------------------------------------------*/
+			.REGIST_PAGE > .SIDE > .DESCRIPTION{
+				flex: 9;
+
+				overflow: auto;
+			}
+
+			.REGIST_PAGE > .SIDE > .ERROR{
+				flex: 1;
+
+				color: red;
+			}
+
+			.REGIST_PAGE > .SIDE > .REGIST{
+				flex: 1;
+
+				overflow: hidden;
+			}
+
+			/*-----------------------------------------------------規約-----------------------------------------------------*/
+			.README_PAGE > .SIDE > .ACCEPT{
+				display: flex;
+				flex-direction: row;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<!--登録ページ-->
+		<DIV CLASS="PLATE REGIST_PAGE" ID="REGIST_PAGE">
+			<DIV CLASS="FIELD">
+				<INPUT TYPE="TEXT" MAX="64" ID="USER_NAME" PLACEHOLDER="お名前" onkeydown="if (event.key == 'Enter') {mel.regist_page.field.id.focus();}" onfocus="description_change('ユーザー名となるお名前です。\n好きに入力してください！')">
+				<INPUT TYPE="TEXT" MAX="64" ID="USER_ID" PLACEHOLDER="ID" onkeydown="if (event.key == 'Enter') {mel.regist_page.field.password.focus();}" onfocus="description_change('IDです。\nアルファベットで入力してください')">
+				<INPUT TYPE="PASSWORD" MAX="256" ID="USER_PASSWORD" PLACEHOLDER="パスワード" onkeydown="if (event.key == 'Enter') {mel.regist_page.field.address.focus();}" onfocus="description_change('パスワードです。\nASCII印字可能文字を入力できます。')">
+				<INPUT TYPE="TEXT" MAX="64" ID="USER_ADDRESS" PLACEHOLDER="メールアドレス/Fediverseアドレス" onkeydown="if (event.key == 'Enter') {regist_next();}" onfocus="description_change('メールアドレスです。\n(先頭に@を付けた場合、Fediverseアドレスとなります)\n\n・使用できるメールアドレス\n> ' + allow_mail_list.join('\n> ') + '\n\n使用できるFediverseアドレス\n> ' + allow_ap_list.join('\n> '))">
+				<INPUT TYPE="DATE" ID="USER_BIRTHDAY">
+			</DIV>
+			<DIV CLASS="SIDE">
+				<DIV CLASS="DESCRIPTION" ID="DESCRIPTION">
+					るみさーばーのアカウント作成へようこそ！<BR>
+					左にある入力欄に情報を入力してください。<BR>
+					入力欄にフォーカスすると、<BR>
+					ここに何を入力するべきなのかが表示されます。<BR>
+				</DIV>
+				<DIV CLASS="ERROR" ID="ERROR"></DIV>
+				<DIV CLASS="REGIST">
+					<BUTTON onclick="regist_next();">登録</BUTTON>
+				</DIV>
+			</DIV>
+		</DIV>
+
+		<!--利用規約-->
+		<DIV CLASS="PLATE README_PAGE" ID="README_PAGE" data-close="true">
+			<DIV CLASS="FIELD">
+				<H3>利用規約</H3><BR>
+				<A HREF="https://rumia.me/readme/rsv-kijaku" target="_blank"><BUTTON>利用規約を開く</BUTTON></A>
+			</DIV>
+			<DIV CLASS="SIDE">
+				るみさーばーの利用規約に<BR>
+				同意しますか？
+
+				<DIV class="cf-turnstile" data-sitekey="0x4AAAAAAAVxc04rq9pveBbK" data-callback="cft_ok" data-language="ja"></DIV>
+
+				<DIV CLASS="ACCEPT">
+					<BUTTON onclick="readme_next();">はい</BUTTON>
+					<BUTTON onclick="dialog.DIALOG('同意しない場合、登録はできません。')">いいえ</BUTTON>
+				</DIV>
+			</DIV>
+		</DIV>
+
+		<!--完了-->
+		<DIV CLASS="PLATE END_PAGE" ID="END_PAGE" data-close="true">
+			<DIV CLASS="FIELD">
+				<H3>仮登録完了</H3><BR>
+				アカウントの仮登録が完了しました！<BR>
+				アドレスにメール(DM)を送ったので、それを開いてね。<BR>
+			</DIV>
+			<DIV CLASS="SIDE">
+				<DIV>
+					メールの場合、迷惑メールに入っている場合があります。<BR>
+					<BR>
+					またGmailの場合は受け取れない場合が多いです、Gmailが受け取り拒否してしまうので。<BR>
+				</DIV>
+			</DIV>
+		</DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST" defer></SCRIPT>
+	<SCRIPT SRC="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></SCRIPT>
+	<SCRIPT defer>
+		let dialog;
+
+		let mel = {
+			regist_page: {
+				parent: document.getElementById("REGIST_PAGE"),
+				field: {
+					name: document.getElementById("USER_NAME"),
+					id: document.getElementById("USER_ID"),
+					password: document.getElementById("USER_PASSWORD"),
+					address: document.getElementById("USER_ADDRESS"),
+					birthday: document.getElementById("USER_BIRTHDAY")
+				},
+				description: document.getElementById("DESCRIPTION"),
+				error: document.getElementById("ERROR")
+			},
+			readme_page: {
+				parent: document.getElementById("README_PAGE")
+			},
+			end_page: {
+				parent: document.getElementById("END_PAGE")
+			}
+		};
+		let allow_mail_list = [];
+		let allow_ap_list = [];
+		let cft_result = null;
+
+		window.cft_ok = function(result) {
+			cft_result = result;
+		}
+
+		window.addEventListener("load", async (e)=>{
+			dialog = new DIALOG_SYSTEM();
+
+			allow_mail_list = await (await fetch("mail.json")).json();
+			allow_ap_list = await (await fetch("apub.json")).json();
+		});
+
+		function description_change(text) {
+			mel.regist_page.description.innerText = text;
+		}
+
+		setInterval(() => {
+			if (id_check() && password_check() && address_check()) {
+				mel.regist_page.error.innerText = "";
+			}
+		}, 100);
+
+		function id_check() {
+			if (mel.regist_page.field.id.value.length == 0) return true;
+
+			if (/^[A-Za-z_]+$/.test(mel.regist_page.field.id.value) == false) {
+				mel.regist_page.error.innerText = "IDに使用できない文字が含まれています";
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		function password_check() {
+			for (let i = 0; i < mel.regist_page.field.password.value.length; i++) {
+				const code = mel.regist_page.field.password.value.charCodeAt(i);
+				if (code < 0x20 || code > 0x7E) {
+					mel.regist_page.error.innerText = "パスワードに使用できない文字が含まれています";
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		function address_check() {
+			if (mel.regist_page.field.address.value.length == 0) return true;
+
+			if (mel.regist_page.field.address.value.startsWith("@")) {
+				//AP
+				const host = mel.regist_page.field.address.value.split("@")[2];
+				if (allow_ap_list.some(row=>row == host) == false) {
+					mel.regist_page.error.innerText = "そのFediverseアドレスは使用できません";
+					return false;
+				}
+			} else {
+				//SMTP
+				const host = mel.regist_page.field.address.value.split("@")[1];
+				if (allow_mail_list.some(row=>row == host) == false) {
+					mel.regist_page.error.innerText = "そのメールアドレスは使用できません";
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		function regist_next() {
+			if (mel.regist_page.field.name.value == "" || mel.regist_page.field.id.value == "" || mel.regist_page.field.password.value == "" || mel.regist_page.field.address.value == "" || mel.regist_page.field.birthday.value == "") {
+				dialog.DIALOG("全ての入力欄を埋めてね");
+				return;
+			}
+
+			mel.regist_page.parent.dataset["close"] = "true";
+			mel.readme_page.parent.dataset["close"] = "false";
+		}
+
+		async function readme_next() {
+			if (cft_result == null) {
+				dialog.DIALOG("ロボットでないことを確認してください！");
+				return;
+			}
+			//mel.readme_page.parent.dataset["close"] = "true";
+			const l = dialog.SHOW_LOAD("お待ち下さい");
+
+			let ajax = await fetch("regist.php", {
+				method: "POST",
+				body: JSON.stringify({
+					NAME: mel.regist_page.field.name.value,
+					ID: mel.regist_page.field.id.value,
+					PASSWORD: mel.regist_page.field.password.value,
+					ADDRESS: mel.regist_page.field.address.value,
+					BIRTHDAY: mel.regist_page.field.birthday.value,
+
+					CFT: cft_result
+				})
+			});
+			const result = await ajax.json();
+			if (result.STATUS) {
+				//終了
+				dialog.CLOSE_LOAD(l);
+
+				mel.readme_page.parent.dataset["close"] = "true";
+				mel.end_page.parent.dataset["close"] = "false";
+			} else {
+				dialog.DIALOG("問題が発生しちゃいました...\n" + JSON.stringify(result.EX));
+			}
+		}
+	</SCRIPT>
+</HTML>

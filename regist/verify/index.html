@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>認証</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+
+		<STYLE>
+			body{
+				background: var(--RSV_DEFAULT_BG);
+				width: 100vw;
+				height: 100vh;
+			}
+
+			.PLATE{
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<DIV CLASS="PLATE">
+			<BUTTON onclick="VERFY();">認証を完了する</BUTTON>
+		</DIV>
+	</BODY>
+</HTML>
+<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+<SCRIPT>
+	let dialog = new DIALOG_SYSTEM();
+
+	async function VERFY() {
+		const PARAM = new URLSearchParams(window.location.search);
+		if (PARAM.get("ID") != null) {
+			let AJAX = await fetch("verify.php?ID=" + PARAM.get("ID"));
+			const RESULT = await AJAX.json();
+			if (RESULT.STATUS) {
+				await dialog.DIALOG("成功しました！ログインをしてください！<BR>(ログイン後、自動的に初期設定画面に移行します)");
+
+				window.location.href = "https://account.rumiserver.com/Login?rd=welcome";
+			} else {
+				await dialog.DIALOG("失敗しました、、、\n" + RESULT.ERR + "\n" + RESULT.EX);
+			}
+		} else {
+			await dialog.DIALOG("IDがありません");
+		}
+	}
+</SCRIPT>

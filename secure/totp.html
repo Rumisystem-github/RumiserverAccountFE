@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>二段階認証</TITLE>
+	</HEAD>
+	<BODY>
+		<DIV ID="TOTP_NONE" STYLE="display: none;">
+			<DIV STYLE="background-color: rgb(255, 0, 0);">二段階認証が設定されていません。</DIV>
+			<BUTTON onclick="setup_start();">設定する</BUTTON>
+
+			<DIV ID="TOTP_NEW" STYLE="display: none;">
+				<DIV>
+					<INPUT ID="TOTP_NEW_URL" readonly>
+					<BUTTON ID="TOTP_NEW_URL_COPY"></BUTTON>
+				</DIV>
+				<DIV>
+					<INPUT ID="TOTP_NEW_SECRET" readonly>
+					<BUTTON ID="TOTP_NEW_SECRET_COPY"></BUTTON>
+				</DIV>
+				<DIV ID="TOTP_NEW_QR"></DIV>
+
+				<BUTTON onclick="setup_end();">次へ</BUTTON>
+			</DIV>
+		</DIV>
+		<DIV ID="TOTP_DONE" STYLE="display: none;">
+			<DIV STYLE="background-color: rgb(0, 255, 0);">二段階認証は設定済みです！</DIV>
+
+			<BUTTON onclick="remove_totp();"><FONT COLOR="RED">削除する</FONT></BUTTON>
+		</DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></SCRIPT>
+	<SCRIPT SRC="Script/Main.js" defer></SCRIPT>
+	<SCRIPT defer>
+		let mel = {
+			none: {
+				parent: document.getElementById("TOTP_NONE"),
+				new: {
+					parent: document.getElementById("TOTP_NEW"),
+					url: document.getElementById("TOTP_NEW_URL"),
+					url_copy: document.getElementById("TOTP_NEW_URL"),
+					secret: document.getElementById("TOTP_NEW_SECRET"),
+					secret_copy: document.getElementById("TOTP_NEW_SECRET_COPY"),
+					qr: document.getElementById("TOTP_NEW_QR")
+				}
+			},
+			done: {
+				parent: document.getElementById("TOTP_DONE")
+			}
+		};
+
+		async function __ready() {
+			let ajax = await fetch("/api/Secure/TOTP", {
+				headers: {
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				}
+			});
+			const result = await ajax.json();
+			if (result.STATUS == false) {
+				dialog.DIALOG("エラー！");
+				return;
+			}
+
+			if (result.TOTP) {
+				mel.done.parent.style.display = "block";
+			} else {
+				mel.none.parent.style.display = "block";
+			}
+		}
+
+		async function setup_start() {
+			let ajax = await fetch("/api/Secure/TOTP", {
+				method: "POST",
+				headers: {
+					"TOKEN": session,
+					"Accept": "application/json; charset=UTF-8"
+				}
+			});
+			const result = await ajax.json();
+
+			if (!result.STATUS) {
+				dialog.DIALOG("エラー");
+				return;
+			}
+
+			const url = result.URL;
+			const secret = new URLSearchParams(new URL(result.URL).search).get("secret");
+
+			mel.none.new.parent.style.display = "block";
+
+			mel.none.new.url.value = url;
+			mel.none.new.url_copy.addEventListener("click", (e)=>{
+				copy(url);
+			});
+
+			mel.none.new.secret.value = secret;
+			mel.none.new.secret_copy.addEventListener("click", (e)=>{
+				copy(secret);
+			});
+
+			new QRCode(mel.none.new.qr, {
+				text: url,
+				width: 256,
+				height: 256,
+			});
+		}
+
+		async function setup_end() {
+			const code = await dialog.INPUT("ワンタイムパスワードを入力してください", {TYPE: "TEXT", NAME:"例：123456"});
+			if (code == null) return;
+
+			let ajax = await fetch("/api/Secure/TOTP", {
+				method: "POST",
+				headers: {
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				},
+				body: JSON.stringify({
+					"CODE": code
+				})
+			});
+			const result = await ajax.json();
+			if (result.STATUS) {
+				window.location.reload();
+			} else {
+				dialog.DIALOG("エラー！");
+			}
+		}
+
+		async function remove_totp() {
+			if (await dialog.INPUT("削除したら戻せません、削除しますか？", {TYPE: "NONE"}) == null) return;
+			let ajax = await fetch(`/api/Secure/TOTP`, {
+				method:"DELETE",
+				headers:{
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				}
+			});
+			const result = await ajax.json();
+			if (result.STATUS) {
+				window.location.reload();
+			} else {
+				dialog.DIALOG("エラー");
+			}
+		}
+	</SCRIPT>
+</HTML>

@@ -1,0 +1,87 @@
+:root{
+	--BORDER_RADIUS: 10px;
+
+	--SIDE_WIDTH: 270px;
+}
+
+body{
+	background: var(--RSV_DEFAULT_BG);
+	width: 100vw;
+	height: 100vh;
+}
+
+.SIDE{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+
+	width: var(--SIDE_WIDTH);
+	height: 100vh;
+
+	background: linear-gradient(180deg, rgb(141, 232, 255) 0%, rgb(255,255,255) 30%);
+
+	overflow: hidden;
+
+	border-top-right-radius: var(--BORDER_RADIUS);
+	border-bottom-right-radius: var(--BORDER_RADIUS);
+}
+
+.SIDE > .TITLE{
+	padding: 20px;
+	font-size: 20px;
+}
+
+.SIDE > hr{
+	width: 100%;
+	height: 2px;
+
+	background: linear-gradient(to right, red 20%, orange 20% 40%, yellow 40% 60%, green 60% 80%, blue 80%);
+
+	border: none;
+}
+
+.SIDE > .DESCRIPTION{
+	padding: 20px;
+}
+
+.MAIN{
+	position: absolute;
+	top: 0px;
+	left: var(--SIDE_WIDTH);
+
+	width: calc(100vw - var(--SIDE_WIDTH) - 40px);
+	height: calc(100vh - 40px);
+
+	margin: 20px;
+}
+
+.MAIN > .USER > img{
+	width: 64px;
+	height: 64px;
+
+	vertical-align: middle;
+}
+
+.MAIN > .USER > span{
+	margin-left: 10px;
+}
+
+.MAIN > .FOLLOW_COUNT_DISPLAY{
+	display: flex;
+	flex-direction: row;
+}
+
+.MAIN > .FOLLOW_COUNT_DISPLAY > div{
+	flex: 1;
+
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.MAIN > .FOLLOW_COUNT_DISPLAY > .FOLLOWED{
+	margin-right: 5px;
+}
+
+.MAIN > .FOLLOW_COUNT_DISPLAY > .FOLLOWER{
+	margin-left: 5px;
+}

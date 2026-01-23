@@ -1,0 +1,37 @@
+body {
+	background: var(--RSV_DEFAULT_BG);
+	background-attachment: fixed;
+}
+
+.PROF{
+	width: 50%;
+	height: calc(100vh - 100px);
+
+	min-width: 400px;
+	max-width: 900px;
+
+	min-height: 500px;
+
+	padding: 10px;
+
+	overflow-y: auto;
+}
+
+.PROF > .INFO > .ICON{
+	width: 100px;
+	height: 100px;
+
+	vertical-align: middle;
+}
+
+.PROF > .INFO > .NAME{
+	font-size: 30px;
+
+	vertical-align: middle;
+}
+
+.PROF > .INFO > .BADGE{
+	font-size: 30px;
+
+	vertical-align: middle;
+}

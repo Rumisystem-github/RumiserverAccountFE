@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>ようこそ</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+
+		<LINK REL="stylesheet" HREF="Style/Main.css">
+		<LINK REL="stylesheet" HREF="Style/Page.css">
+		<LINK REL="stylesheet" HREF="Style/IconForm.css">
+	</HEAD>
+	<BODY>
+		<DIV CLASS="PLATE">
+			<DIV ID="WELCOME_PAGE" data-status="open">
+				<H2>ようこそ</H2>
+				るみさーばーへようこそ！<BR>
+				アカウントのセットアップをしましょう。<BR>
+				<BUTTON onclick="start();">はい</BUTTON>
+			</DIV>
+
+			<DIV ID="PROFILE_PAGE" data-status="hide">
+				<H2>プロフィール</H2>
+				あなたのプロフィールを完成させましょう。<BR>
+
+				<DIV CLASS="PROFILE_FIELD">
+					<DIV>
+						<IMG CLASS="ICON" ID="INPUT_USER_ICON" SRC="/api/Icon?UID=0" onclick="open_icon_form();">
+						<INPUT TYPE="TEXT" ID="INPUT_USER_NAME" VALUE="名無し">
+					</DIV>
+					<TEXTAREA ID="INPUT_USER_DESCRIPTION">自己紹介</TEXTAREA>
+					<BUTTON onclick="profile_next();">次へ</BUTTON>
+				</DIV>
+			</DIV>
+
+			<DIV ID="END_PAGE" data-status="hide">
+				<H2>完了です</H2>
+				るみさーばーへようこそ、<SPAN ID="END_NAME"></SPAN>さん！<BR>
+				<BR>
+				<A HREF="https://rumiserver.com/promotion/">るみさーばー内のサービスはこちらでご覧いただけます</A>
+			</DIV>
+		</DIV>
+
+		<DIV CLASS="ICON_FORM PLATE" ID="ICON_FORM" STYLE="display: none;">
+			<IFRAME SRC="/icon_form.html"></IFRAME>
+		</DIV>
+	</BODY>
+</HTML>
+<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+<SCRIPT defer>
+	let dialog = new DIALOG_SYSTEM();
+	let mel = {
+		page: {
+			welcome: {
+				parent: document.getElementById("WELCOME_PAGE")
+			},
+			profile: {
+				parent: document.getElementById("PROFILE_PAGE"),
+				field: {
+					icon: document.getElementById("INPUT_USER_ICON"),
+					name: document.getElementById("INPUT_USER_NAME"),
+					description: document.getElementById("INPUT_USER_DESCRIPTION")
+				}
+			},
+			end: {
+				parent: document.getElementById("END_PAGE"),
+				name: document.getElementById("END_NAME")
+			}
+		},
+		icon_form: {
+			parent: document.getElementById("ICON_FORM")
+		}
+	};
+
+	let session = null;
+	let self_user = null;
+	let profile = {
+		name: "",
+		description: ""
+	};
+
+	window.addEventListener("load", async (e)=>{
+		session = ReadCOOKIE().SESSION;
+		if (session == null) {
+			window.location.href = "/Login?rd=welcome";
+			return;
+		}
+
+		self_user = await LOGIN(session);
+		if (self_user == false) {
+			window.location.href = "/Login?rd=welcome";
+			return;
+		}
+	});
+
+	//-----------------------------------------------------------アイコン
+	function open_icon_form() {
+		mel.icon_form.parent.style.display = "block";
+	}
+
+	function __update_icon_success() {
+		update_icon_form();
+	}
+
+	function __update_icon_failed() {
+		dialog.DIALOG("エラー");
+
+		mel.icon_form.parent.style.display = "none";
+	}
+
+	async function update_icon_form() {
+		mel.icon_form.parent.style.display = "none";
+
+		let ajax = await fetch("/api/Icon?UID="+self_user.UID);
+		const result = await ajax.blob();
+
+		const reader = new FileReader();
+		reader.addEventListener("loadend", (e)=>{
+			mel.page.profile.field.icon.src = reader.result;
+		});
+		reader.readAsDataURL(result);
+	}
+
+	//-----------------------------------------------------------ページ
+	function start() {
+		mel.page.welcome.parent.dataset.status = "close";
+		mel.page.profile.parent.dataset.status = "open";
+	}
+
+	async function profile_next() {
+		//セット
+		profile.name = mel.page.profile.field.name.value;
+		profile.description = mel.page.profile.field.description.value;
+
+		const l = dialog.SHOW_LOAD();
+
+		let ajax = await fetch("/api/User", {
+			method: "PATCH",
+			headers: {
+				TOKEN: session
+			},
+			body: JSON.stringify({
+				"NAME": profile.name,
+				"DESC": profile.description
+			})
+		});
+		const result = await ajax.json();
+		dialog.CLOSE_LOAD(l);
+
+		if (result.STATUS == false) {
+			dialog.DIALOG("エラー");
+		}
+
+		//文字を変える
+		mel.page.end.name.innerText = profile.name;
+
+		//次のページへ
+		mel.page.profile.parent.dataset.status = "close";
+		mel.page.end.parent.dataset.status = "open";
+	}
+</SCRIPT>

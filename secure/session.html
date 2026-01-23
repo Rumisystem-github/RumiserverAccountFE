@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>セッション</TITLE>
+
+		<STYLE>
+			.SESSION_ITEM{
+				margin: 10;
+				padding: 10px;
+
+				border: double 3px;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<DIV ID="SESSION_LIST"></DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></SCRIPT>
+	<SCRIPT SRC="Script/Main.js" defer></SCRIPT>
+	<SCRIPT defer>
+		let mel = {
+			session_list: document.getElementById("SESSION_LIST")
+		};
+
+		async function __ready() {
+			let ajax = await fetch("/api/Session", {
+				headers: {
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				}
+			});
+			const result = await ajax.json();
+
+			for (let i = 0; i < result.LIST.length; i++) {
+				const row = result.LIST[i];
+				let item = document.createElement("DIV");
+				item.className = "SESSION_ITEM";
+				mel.session_list.appendChild(item);
+
+				let device_name = document.createElement("DIV");
+				device_name.innerText = row.DEVICE;
+				item.appendChild(device_name);
+
+				let app_name = document.createElement("DIV");
+				item.appendChild(app_name);
+				if (row.APP != null) {
+					app_name.innerText = row.APP.NAME;
+				} else {
+					app_name.innerText = "ウェブ";
+				}
+
+				let date_field = document.createElement("DIV");
+				date_field.className = "DATE";
+				item.appendChild(date_field);
+
+				let date = document.createElement("DIV");
+				date.innerText = row.DATE;
+				date_field.appendChild(date);
+
+				let update = document.createElement("DIV");
+				update.innerText = row.UPDATE;
+				date_field.appendChild(update);
+
+				let controle_field = document.createElement("DIV");
+				item.appendChild(controle_field);
+
+				let logout_button = document.createElement("BUTTON");
+				controle_field.appendChild(logout_button);
+				logout_button.innerText = "ログアウト";
+				logout_button.addEventListener("click", async (e)=>{
+					let n = await fetch("/api/Session?ID=" + row.ID, {
+						method: "DELETE",
+						headers: {
+							"TOKEN": session,
+							"Content-Type": "application/json; charset=UTF-8",
+							"Accept": "application/json; charset=UTF-8"
+						}
+					});
+					const r = await n.json();
+					if (r.STATUS) {
+						window.location.reload();
+					} else {
+						dialog.DIALOG("エラー");
+					}
+				});
+			}
+		}
+	</SCRIPT>
+</HTML>
