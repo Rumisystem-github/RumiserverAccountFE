@@ -34,13 +34,13 @@ let mel = {
 window.addEventListener("load", async (e)=>{
 	session = ReadCOOKIE().SESSION;
 	if (session == null) {
-		window.location.href = "/Login";
+		window.location.href = "/login";
 		return;
 	}
 
 	self_user = await LOGIN(session);
 	if (self_user == false) {
-		window.location.href = "/Login";
+		window.location.href = "/login";
 		return;
 	}
 

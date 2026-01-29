@@ -1,319 +1,330 @@
 <?php
-include("http://plain-cdn.rumia.me/LIB/AJAX.php?V=LATEST");
-include("http://plain-cdn.rumia.me/LIB/RMD.php");
-include("http://plain-cdn.rumia.me/LIB/OGP.php?V=LATEST");
-include("http://plain-cdn.rumia.me/LIB/SERVICE_LOGIN.php");
-
-$BASE_URL = "/user";
-$BASE_URI = "/RumiServerAccount/user";
-$REQUEST_URI = str_replace($BASE_URI."/", "", parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH));
-$TITLE = "qa";
-$FOLLOWBTN = false;
-$FOLLOW = false;
-$FOLLOWER = false;
-$BLOCK = false;
-$BLOCKER = false;
-$OS = new RS_SERVICE_LOGIN_SYSTEM();
-$LOGIN_RESULT = $OS->MAIN();
-
 //環境設定
-$ENV = file_get_contents($_SERVER['DOCUMENT_ROOT']."/ENV.json");
-if($ENV === false){
-	echo json_encode(array("STATUS" => false, "ERR" => "ENV ERR"));
+$env = file_get_contents($_SERVER['DOCUMENT_ROOT']."/ENV.json");
+if($env === false){
 	exit;
 }else{
-	$ENV = json_decode($ENV, true);
+	$env = json_decode($env, true);
 	if(json_last_error() !== 0){
-		echo json_encode(array("STATUS" => false, "ERR" => "ENV ERR"));
 		exit;
 	}
 }
 
-$HEADER = [];
+$sql = new PDO(
+	"mysql:host=".$env["SQL_HOST"].";dbname=RumiServer;",
+	$env["SQL_UID"],
+	$env["SQL_PASS"],
+	[PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+);
 
-//ログインしているならヘッダーにトークンを
-if ($LOGIN_RESULT !== false) {
-	$HEADER = [
-		"TOKEN: ".$_COOKIE["SESSION"]
-	];
-}
+$user_id;
+$user_uid;
+$user_name;
 
-$RESULT = json_decode(FETCH($ENV["RSV"]["ACCOUNT"]."User?UID=".$REQUEST_URI, $HEADER), true);
-$ACCOUNT = null;
-if ($RESULT["STATUS"]) {
-	$ACCOUNT = $RESULT["ACCOUNT"];
+$parts = explode("/", $_SERVER["REQUEST_URI"]);
+if (count($parts) > 3) {
+	$user_uid = $parts[3];
 
-	$TITLE = htmlspecialchars($ACCOUNT["NAME"]);
+	$stmt = $sql->prepare("SELECT `ID`, `NAME` FROM `ACCOUNT` WHERE `UID` = :UID;");
+	$stmt->bindValue(":UID", $user_uid, PDO::PARAM_STR);
+	$stmt->execute();
+	$user = $stmt->fetch();
 
-	//ログインしている場合の処理を入れる
-	if ($LOGIN_RESULT !== false){
-		//フォローボタン
-		if ($REQUEST_URI !== $LOGIN_RESULT["UID"]) {
-			$FOLLOWBTN = true;
-
-			//フォロー
-			$FOLLOW = $RESULT["FOLLOW"];
-
-			//フォロワー
-			$FOLLOWER = $RESULT["FOLLOWER"];
-
-			//ブロック済み
-			if ($RESULT["BLOCK"]) {
-				$TITLE = "ブロック済みのアカウント";
-				$BLOCK = true;
-			}
-
-			//ブロックされてる
-			if ($RESULT["BLOCKER"]) {
-				http_response_code(400);
-				$TITLE = "アクセス拒否";
-				$ACCOUNT = null;
-				$BLOCKER = true;
-			}
-		}
+	if ($user == false) {
+		http_response_code(404);
+		echo file_get_contents(__DIR__."/../../ErrorPage/404/index.html");
+		exit;
 	}
-} else {
-	http_response_code(404);
-	$TITLE = "存在しないアカウント";
+
+	$user_id = $user["ID"];
+	$user_name = $user["NAME"];
 }
 ?>
 <!DOCTYPE html>
 <HTML>
 	<HEAD>
-		<TITLE><?=$TITLE?></TITLE>
+		<TITLE><?=htmlspecialchars($user_name)?></TITLE>
+
+		<META PROPERTY="og:type" CONTENT="website" />
+		<META PROPERTY="og:url" CONTENT="https://account.rumiserver.com/user/" />
+		<META PROPERTY="og:title" CONTENT="<?=htmlspecialchars($user_name)?>" />
+		<META PROPERTY="og:description" CONTENT="ユーザー" />
+		<META PROPERTY="og:site_name" CONTENT="るみさーばー" />
+		<META PROPERTY="og:image" CONTENT="https://account.rumiserver.com/api/Icon?ID=<?=htmlspecialchars($user_id)?>" />
 
 		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
-		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
 		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
 		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/icon.css">
 
-		<META name="theme-color" content="#FED6E3" />
-
-		<LINK REL="stylesheet" HREF="<?=$BASE_URL?>/STYLE/Main.css">
-		<LINK REL="stylesheet" HREF="<?=$BASE_URL?>/STYLE/RENKEI_ACCOUNT.css">
-
-		<?php
-			$OGP = new OGP_PHP();
-			$OGP->SET_TYPE(false);
-
-			$OGP->SET_PAGENAME("るみさーばー");
-			$OGP->SET_TITLE($TITLE);
-			if ($ACCOUNT != null) {
-				$OGP->SET_DESC(htmlspecialchars($ACCOUNT["NAME"])."のプロフィール");
-			} else {
-				$OGP->SET_DESC("?");
+		<STYLE>
+			body{
+				background: var(--RSV_DEFAULT_BG);
+				width: 100vw;
+				height: 100vh;
 			}
-			$OGP->BUILD();
-		?>
+
+			.USER{
+				width: 50vw;
+				min-width: 500px;
+
+				min-height: 150px;
+			}
+
+			.RR_MESSAGE{
+				position: absolute;
+				top: 10px;
+				left: 10px;
+
+				padding: 5px;
+
+				background-color: rgba(0, 0, 0, 0.5);
+				color: white;
+
+				border-radius: 5px;
+			}
+
+			.USER > .HEADER{
+				position: absolute;
+				top: 20px;
+				z-index: -1;
+
+				background-color: red;
+
+				width: calc(100% - 32px);
+				height: 150px;
+			}
+
+			.USER > .NAME{
+				margin: 10px;
+				margin-top: 100px;
+			}
+
+			.USER >.NAME > img{
+				width: 128px;
+				height: 128px;
+
+				vertical-align: middle;
+			}
+
+			.USER >.NAME > span{
+				margin-left: 10px;
+
+				vertical-align: bottom;
+			}
+
+			.USER >.NAME > span > span{
+				font-size: 30px;
+			}
+
+			.USER > .DESCRIPTION{
+				width: 100%;
+
+				margin-top: -83px;
+				padding-top: 80px;
+				padding-left: 10px;
+				padding-bottom: 10px;
+
+				background-color: white;
+			}
+
+			.MENU{
+				width: fit-content;
+			}
+		</STYLE>
 	</HEAD>
 	<BODY>
-		<DIV CLASS="PROF PLATE PLATE_CENTER">
-			<?php
-			if ($ACCOUNT != null) {
-				?>
-				<DIV CLASS="INFO">
-					<IMG CLASS="ICON ICON_<?=htmlspecialchars($ACCOUNT["ICON"])?>" SRC="https://account.rumiserver.com/api/Icon?ID=<?=htmlspecialchars($ACCOUNT["ID"])?>">
-					<SPAN CLASS="NAME"><?=htmlspecialchars($ACCOUNT["NAME"])?></SPAN>
+		<DIV CLASS="PLATE PLATE_CENTER">
+			<DIV CLASS="USER">
+				<DIV CLASS="HEADER">
+					<DIV CLASS="RR_MESSAGE" ID="RR_MESSAGE" STYLE="display: none;"></DIV>
+				</DIV>
 
-					<!--フォローボタン-->
-					<?php
-					if ($FOLLOWBTN) {
-						$FOLLOWBTN_STATE = "none";
-						$FOLLOWBTN_TEXT = "フォロー";
-
-						if ($FOLLOW) {
-							$FOLLOWBTN_STATE = "following";
-							$FOLLOWBTN_TEXT = "フォロー解除";
-						}
-
-						?>
-						<BUTTON onclick="FollowClick(this);" CLASS="FOLLOW_BUTTON" data-state="<?=$FOLLOWBTN_STATE?>"><?=$FOLLOWBTN_TEXT?></BUTTON>
-						<?php
-					}
-					?>
-
-					<!--ブロック-->
-					<?php
-					if ($BLOCK) {
-						echo "<FONT COLOR=\"RED\">ブロック済みです</FONT>";
-					}
-					?>
-
-					<!--バッジ-->
-					<SPAN CLASS="BADGE">
-						<?php
-							foreach ($ACCOUNT["BADGE"] as $BADGE) {
-								$ALT = "あ";
-
-								switch ($BADGE["TYPE"]) {
-									case "ROOT"; {
-										$ALT = "運営もとい開発者";
-										break;
-									}
-
-									case "ADMIN"; {
-										$ALT = "モデレーター";
-										break;
-									}
-
-									case "DEVELOP"; {
-										$ALT = "るみ鯖の開発に関与しています";
-										break;
-									}
-
-									case "NATION_STAFF"; {
-										$ALT = "この人はどこかの国のスタッフです";
-										break;
-									}
-
-									case "BAN"; {
-										$ALT = "この人はBANされる予定があります";
-										break;
-									}
-								}
-
-								echo "<IMG SRC=\"/Asset/BADGE/".$BADGE["TYPE"].".svg\" WIDTH=\"25\" HEIGHT=\"25\" ALT=\"".$ALT."\">";
-							}
-						?>
+				<DIV CLASS="NAME">
+					<IMG CLASS="ICON_HEXAGON" ID="USER_ICON">
+					<SPAN>
+						<SPAN ID="USER_NAME">名前</SPAN>
+						<BUTTON ID="FOLLOW_BUTTON">フォロー</BUTTON>
+						<BUTTON ID="MENU_BUTTON">︙</BUTTON>
 					</SPAN>
 				</DIV>
-
-				<!--フォロワー？-->
-				<?php
-				if ($FOLLOWER) {
-					?>
-					<DIV>フォロワー</DIV>
-					<?php
-				}
-				?>
-
-				<!--プロフ-->
-				<DIV CLASS="DESC"><?=RMD_CONV(htmlspecialchars($ACCOUNT["DESCRIPTION"]))?></DIV>
-
-				<!--場所-->
-				<DIV><?=htmlspecialchars($ACCOUNT["LOCATION"])?></DIV>
-
-				<!--連携-->
-				<DIV CLASS="RENKEI_LIST">
-					<?php
-					foreach ($ACCOUNT["RENKEI"] as $RENKEI) {
-						?>
-						<DIV CLASS="RENKEI_ITEM">
-							<DIV CLASS="SERVICE_INFO">
-								<IMG SRC="<?=htmlspecialchars($RENKEI["SERVICE_ICON"])?>">
-								<SPAN><?=htmlspecialchars($RENKEI["SERVICE_NAME"])?></SPAN>
-							</DIV>
-							<DIV CLASS="ACCOUNT_INFO">
-								<A HREF="<?=htmlspecialchars($RENKEI["ACCOUNT_URL"])?>" TARGET="_blank"><?=htmlspecialchars($RENKEI["ACCOUNT_NAME"])?></A>
-							</DIV>
-							<DIV CLASS="RENKEI_INFO">
-								<DIV CLASS="DATE">追加日:<?=htmlspecialchars($RENKEI["DATE"])?></DIV>
-								<DIV CLASS="UPDATE">更新日:<?=htmlspecialchars($RENKEI["UPDATE"])?></DIV>
-							</DIV>
-						</DIV>
-						<?php
-					}
-					?>
+				<DIV CLASS="DESCRIPTION">
+					<DIV ID="USER_DESCRIPTION"></DIV>
 				</DIV>
+			</DIV>
+		</DIV>
 
-				<!--登録日-->
-				<DIV><?=htmlspecialchars($ACCOUNT["REGIST_DATE"])?>に作成</DIV>
-			<?php
-		} else {
-			if (!$BLOCKER) {
-				echo "アカウントが無いです";
-			} else {
-				echo "ブロックされています";
-			}
-		}
-		?>
-
-		<!--ブロックボタン-->
-		<?php
-			$BLOCKBTN_TEXT = "ブロックする";
-
-			if ($BLOCK) {
-				$BLOCKBTN_TEXT = "ブロック解除する";
-			}
-
-			?>
-			<BUTTON onclick="BlockClick(this);"><?=$BLOCKBTN_TEXT?></BUTTON>
-			<?php
-		?>
+		<DIV CLASS="PLATE MENU" ID="MENU" STYLE="display: none;">
+			<BUTTON ID="MENU_BLOCK_BUTTON">ブロック</BUTTON>
 		</DIV>
 	</BODY>
 
-	<SCRIPT>
-		const UID = "<?=$ACCOUNT["UID"]?>";
-		const SESSION = "<?=$_COOKIE["SESSION"]?>";
-		let FOLLOW = <?php if ($FOLLOW) { echo "true"; } else { echo "false"; } ?>;
-		let BLOCK = <?php if ($BLOCK) { echo "true"; } else { echo "false"; } ?>;
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT default>
+		const user_id = "<?=$user_id?>";
+		let session;
+		let self_user;
 
-		async function FollowClick(BTN) {
-			let METHOD = "POST";
+		let is_login = true;
+		let is_self = false;
 
-			if (FOLLOW) {
-				METHOD = "DELETE";
-			}
+		let user;
+		let followed = false;
+		let follower = false;
+		let blocked = false;
+		let blocker = false;
 
-			//読み込み中を示す
-			BTN.innerText = "・・・";
-			//無効化
-			BTN.setAttribute("disabled", true);
+		let mel = {
+			icon: document.getElementById("USER_ICON"),
+			name: document.getElementById("USER_NAME"),
+			description: document.getElementById("USER_DESCRIPTION"),
+			follow_button:document.getElementById("FOLLOW_BUTTON"),
+			menu_button:document.getElementById("MENU_BUTTON"),
+			menu: {
+				parent: document.getElementById("MENU"),
+				block_button:document.getElementById("MENU_BLOCK_BUTTON")
+			},
+			rr_message: document.getElementById("RR_MESSAGE")
+		};
 
-			let AJAX = await fetch("https://account.rumiserver.com/api/Follow?UID=" + UID, {
-				method: METHOD,
-				headers:{
-					"TOKEN":SESSION
+		window.addEventListener("load", async function (){
+			session = ReadCOOKIE().SESSION;
+			if (session == null) is_login = false;
+
+			self_user = await LOGIN(session);
+			if (self_user == false) is_login = false;
+
+			let ajax = await fetch("/api/User?ID=" + user_id, {
+				method: "GET",
+				headers: {
+					"TOKEN": session,
+					"Accept": "application/json"
 				}
 			});
 
-			const RESULT = await AJAX.json();
+			const result = await ajax.json();
+			if (result.ACCOUNT.ID == self_user.ID) is_self = true;
 
-			//有効化
-			BTN.removeAttribute("disabled")
+			user = result.ACCOUNT;
 
-			if(RESULT.STATUS){
-				if (FOLLOW) {
-					FOLLOW = false;
-					BTN.innerText = "フォロー";
-					BTN.dataset.state = "none";
+			mel.icon.src = user.ICON_RAW_URL;
+			mel.icon.className = "ICON_" + user.ICON;
+			mel.name.innerText = user.NAME;
+			mel.description.innerText = user.DESCRIPTION;
+
+			if (is_self || !is_login) {
+				mel.follow_button.style.display = "none";
+				mel.menu_button.style.display = "none";
+			}
+
+			if (is_login) {
+				followed = result.FOLLOW;
+				follower = result.FOLLOWER;
+				blocked = result.BLOCK;
+				blocker = result.BLOCKER;
+
+				update_follow_button_text();
+				update_block_button_text();
+			}
+
+			if (blocker) {
+				mel.follow_button.style.display = "none";
+				mel.menu_button.style.display = "none";
+				show_rr_message("ブロックされています");
+			}
+
+			if (follower) {
+				show_rr_message("フォローされています");
+			}
+		});
+
+		function show_rr_message(message) {
+			mel.rr_message.style.display = "block";
+			mel.rr_message.innerText = message;
+		}
+
+		function update_follow_button_text() {
+			if (followed) {
+				mel.follow_button.innerText = "フォロー解除";
+			} else {
+				if (follower) {
+					mel.follow_button.innerText = "フォローバック";
 				} else {
-					FOLLOW = true;
-					BTN.innerText = "フォロー解除";
-					BTN.dataset.state = "following";
+					mel.follow_button.innerText = "フォロー";
 				}
-
-			} else {
-				BTN.innerText = "失敗";
 			}
 		}
 
-		async function BlockClick(BTN) {
-			let METHOD = "POST";
+		function update_block_button_text() {
+			if (blocked) {
+				mel.menu.block_button.innerText = "ブロック解除";
+			} else {
+				if (blocker) {
+					mel.menu.block_button.innerText = "ブロックバック";
+				} else {
+					mel.menu.block_button.innerText = "ブロック";
+				}
+			}
+		}
 
-			if (BLOCK) {
-				METHOD = "DELETE";
+		mel.follow_button.addEventListener("click", async function() {
+			if (blocked || blocker) return;
+
+			let method = "";
+			if (followed) {
+				method = "DELETE";
+			} else {
+				method = "POST";
 			}
 
-			//読み込み中を示す
-			BTN.innerText = "・・・";
-			//無効化
-			BTN.setAttribute("disabled", true);
-
-			let AJAX = await fetch("https://account.rumiserver.com/api/Block?UID=" + UID, {
-				method: METHOD,
-				headers:{
-					"TOKEN":SESSION
+			let ajax = await fetch("/api/Follow?UID=" + user.UID, {
+				method: method,
+				headers: {
+					"TOKEN": session,
+					"Accept": "application/json"
 				}
 			});
+			const result = await ajax.json();
 
-			const RESULT = await AJAX.json();
-			if(RESULT.STATUS){
-				window.location.reload();
+			if (result.STATUS) {
+				followed = !followed;
+				update_follow_button_text();
 			} else {
-				BTN.innerText = "失敗";
+				mel.follow_button.innerText = "エラー";
 			}
-		}
+		});
+
+		mel.menu_button.addEventListener("click", function() {
+			if (blocked || blocker) return;
+
+			if (mel.menu.parent.style.display == "none") {
+				mel.menu.parent.style.display = "block";
+			} else {
+				mel.menu.parent.style.display = "none";
+			}
+		});
+
+		mel.menu.block_button.addEventListener("click", async function() {
+			let method = "";
+			if (followed) {
+				method = "DELETE";
+			} else {
+				method = "POST";
+			}
+
+			let ajax = await fetch("/api/Block?UID=" + user.UID, {
+				method: method,
+				headers: {
+					"TOKEN": session,
+					"Accept": "application/json"
+				}
+			});
+			const result = await ajax.json();
+
+			if (result.STATUS) {
+				window.location.reload();
+			}
+		});
 	</SCRIPT>
 </HTML>
