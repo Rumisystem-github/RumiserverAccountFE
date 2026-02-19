@@ -58,7 +58,7 @@
 
 			<DIV CLASS="CONTROLE">
 				<DIV>
-					<INPUT TYPE="FILE" onchange="open_file(this.files[0]); reset();">
+					<INPUT TYPE="FILE" onchange="open_file(this.files[0]);">
 				</DIV>
 				<DIV>
 					<BUTTON onclick="reset(); draw();">リセット</BUTTON>
@@ -117,42 +117,46 @@
 
 		//初期化
 		window.addEventListener("load", async (e)=>{
-			//キャンバスを初期化
-			mel.display.width = target_width;
-			mel.display.height = target_height;
+			try {
+				//キャンバスを初期化
+				mel.display.width = target_width;
+				mel.display.height = target_height;
 
-			//値を初期化
-			mel.controle.x.value = 0;
-			mel.controle.y.value = 0;
-			mel.controle.w.value = 0;
-			mel.controle.h.value = 0;
+				//値を初期化
+				mel.controle.x.value = 0;
+				mel.controle.y.value = 0;
+				mel.controle.w.value = 0;
+				mel.controle.h.value = 0;
 
-			//ログイン
-			session = ReadCOOKIE().SESSION;
-			if (session == null) {
-				window.location.href = "/";
-				return;
+				//ログイン
+				session = ReadCOOKIE().SESSION;
+				if (session == null) {
+					window.location.href = "/";
+					return;
+				}
+				const self_user = await LOGIN(session);
+				if (self_user == false) {
+					window.location.href = "/";
+					return;
+				}
+
+				//DB初期化
+				await init_sql();
+
+				//SQLから画像を呼び出す(画像があるなら)
+				const file = await get_file_from_sql();
+				if (file != null) {
+					await load_file(file);
+
+					//SQLから前の設定を呼び出す
+					await load_setting_from_sql();
+				}
+
+				mel.wait.style.display = "none";
+				mel.main.style.display = "flex";
+			} catch(ex) {
+				await clear_sql();
 			}
-			const self_user = await LOGIN(session);
-			if (self_user == false) {
-				window.location.href = "/";
-				return;
-			}
-
-			//DB初期化
-			await init_sql();
-
-			//SQLから画像を呼び出す(画像があるなら)
-			const file = await get_file_from_sql();
-			if (file != null) {
-				await load_file(file);
-
-				//SQLから前の設定を呼び出す
-				await load_setting_from_sql();
-			}
-
-			mel.wait.style.display = "none";
-			mel.main.style.display = "flex";
 		});
 
 		//マウスクリック
@@ -206,6 +210,7 @@
 
 		//画像ロード
 		image.addEventListener("load", (e)=>{
+			reset();
 			draw();
 		});
 
@@ -334,17 +339,21 @@
 
 		async function get_file_from_sql() {
 			return new Promise((resolve, reject) => {
-				let r = indexedDB.open(DB_NAME, 1);
+				try {
+					let r = indexedDB.open(DB_NAME, 1);
 
-				r.onsuccess = function(e) {
-					const db = e.target.result;
-					const tx = db.transaction(DB_IMAGE_TABLE_NAME, "readonly");
-					const store = tx.objectStore(DB_IMAGE_TABLE_NAME);
-					const get = store.get("image");
-					get.onsuccess = function() {
-						const file = get.result;
-						resolve(file);
+					r.onsuccess = function(e) {
+						const db = e.target.result;
+						const tx = db.transaction(DB_IMAGE_TABLE_NAME, "readonly");
+						const store = tx.objectStore(DB_IMAGE_TABLE_NAME);
+						const get = store.get("image");
+						get.onsuccess = function() {
+							const file = get.result;
+							resolve(file);
+						}
 					}
+				} catch {
+					clear_sql();
 				}
 			});
 		}
@@ -372,15 +381,19 @@
 					const store = tx.objectStore(DB_SETTING_TABLE_NAME);
 					const get = store.get("setting");
 					get.onsuccess = function() {
-						const setting = get.result;
+						try {
+							const setting = get.result;
 
-						mel.controle.x.value = setting.x;
-						mel.controle.y.value = setting.y;
-						mel.controle.w.value = setting.w;
-						mel.controle.h.value = setting.h;
-						draw();
+							mel.controle.x.value = setting.x;
+							mel.controle.y.value = setting.y;
+							mel.controle.w.value = setting.w;
+							mel.controle.h.value = setting.h;
+							draw();
 
-						resolve();
+							resolve();
+						} catch {
+							clear_sql();
+						}
 					}
 				}
 			});
@@ -404,6 +417,11 @@
 					resolve();
 				}
 			});
+		}
+
+		async function clear_sql() {
+			await indexedDB.deleteDatabase(DB_NAME);
+			window.location.reload();
 		}
 	</SCRIPT>
 </HTML>
