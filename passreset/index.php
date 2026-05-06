@@ -110,28 +110,44 @@ function send(PDO $pdo, string $user_id, array $env) {
 
 	$stmt = $pdo->prepare("
 		SELECT
-			a.ID,
-			c.`ADDRESS`,
-			c.`TYPE`
+			a.ID
 		FROM
 			`ACCOUNT` AS a
-		LEFT JOIN
-			`CONTACT` AS c ON a.ID = c.UID AND c.SECURE = 1
 		WHERE
 			a.UID = :UID;
 	");
 	$stmt->bindValue(":UID", $user_id, PDO::PARAM_STR);
 	$stmt->execute();
-	$result = $stmt->fetchAll();
+	$user_fetch = $stmt->fetch();
 
-	if (count($result) == 0) {
+	if ($user_fetch == false) {
+		echo "んなアカウントありませんでした";
+		return;
+	}
+
+	$stmt = $pdo->prepare("
+		SELECT
+			c.`ADDRESS`,
+			c.`TYPE`
+		FROM
+			`CONTACT` AS c
+		WHERE
+			c.UID = :ID
+		AND
+			c.SECURE = 1;
+	");
+	$stmt->bindValue(":ID", $user_fetch["ID"], PDO::PARAM_INT);
+	$stmt->execute();
+	$address_fetch = $stmt->fetch();
+
+	if ($address_fetch == false) {
 		echo "そのユーザーにはセキュリティ用のアドレスがありません。";
 		return;
 	}
 
-	$user_internal_id = $result[0]["ID"];
-	$address = $result[0]["ADDRESS"];
-	$address_type = $result[0]["TYPE"];
+	$user_internal_id = $user_fetch["ID"];
+	$address = $address_fetch["ADDRESS"];
+	$address_type = $address_fetch["TYPE"];
 	$session_id = uniqid();
 	$mail_body = "";
 
@@ -228,7 +244,7 @@ function send(PDO $pdo, string $user_id, array $env) {
 
 	echo "本文の指示に従い、パスワードをリセットしてください";
 
-	$stmt = $pdo->prepare("INSERT INTO `PASSWORD_RESET` (`ID`, `UID`, `DATE`) VALUES (:ID, :UID, NOW());");
+	$stmt = $pdo->prepare("INSERT INTO `PASSWORD_RESET` (`ID`, `USER`, `DATE`) VALUES (:ID, :UID, NOW());");
 	$stmt->bindValue(":ID", $session_id, PDO::PARAM_STR);
 	$stmt->bindValue(":UID", $user_internal_id, PDO::PARAM_STR);
 	$stmt->execute();

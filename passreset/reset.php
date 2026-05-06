@@ -63,7 +63,7 @@ function main() {
 	}
 
 	//IDからパスリセのセッションを取得
-	$stmt = $pdo->prepare("SELECT `UID` FROM `PASSWORD_RESET` WHERE `ID` = :ID;");
+	$stmt = $pdo->prepare("SELECT `USER` FROM `PASSWORD_RESET` WHERE `ID` = :ID;");
 	$stmt->bindValue(":ID", $_GET["ID"], PDO::PARAM_STR);
 	$stmt->execute();
 	$result = $stmt->fetchAll();
@@ -73,7 +73,7 @@ function main() {
 		return;
 	}
 
-	$user_id = $result[0]["UID"];
+	$user_id = $result[0]["USER"];
 	$method = $_SERVER["REQUEST_METHOD"];
 
 	if ($method == "GET") {
