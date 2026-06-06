@@ -1,6 +1,6 @@
 <?php
-require("http://plain-cdn.rumia.me/LIB/SERVICE_LOGIN.php");
-require("http://plain-cdn.rumia.me/LIB/SQL.php?V=LATEST");
+require("https://cdn.rumia.me/LIB/SERVICE_LOGIN.php");
+require("https://cdn.rumia.me/LIB/SQL.php?V=LATEST");
 require(__DIR__."/MODULE/GetAPP.php");
 
 //URLパラメーターをチェックする
