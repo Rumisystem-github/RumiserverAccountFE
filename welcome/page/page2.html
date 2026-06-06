@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>ようこそ</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+	</HEAD>
+	<BODY>
+		<H1>二段階認証を設定</H1>
+		アカウントを安全に保つため、二段階認証を設定してください。<BR>
+		<A HREF="https://eth.rumiserver.com/notes/an5lu08xmeu50cpl" TARGET="_blank">二段階認証の設定がめんどうくさいですか？</A>
+
+		<IFRAME SRC="/secure/totp.html"></IFRAME>
+	</BODY>
+
+	<SCRIPT>
+		function __ipc(msg) {
+			if (msg === "TOTP_OK") {
+				window.location.href = "/welcome/page/page3.html";
+			}
+		}
+	</SCRIPT>
+</HTML>

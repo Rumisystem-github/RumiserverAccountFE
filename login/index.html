@@ -157,7 +157,7 @@
 			//クッキーにセッションを登録
 			let cookie_date = new Date();
 			cookie_date.setTime(cookie_date.getTime() + 400 * 24 * 60 * 60 * 1000);
-			document.cookie = `SESSION=${result.SESSION_ID}; path=/; domain=rumiserver.com; expires=${cookie_date.toUTCString()}; Secure`;
+			document.cookie = `SESSION=${result.SESSION_ID}; path=/; domain=rumiserver.com; expires=${cookie_date.toUTCString()}; Secure; SameSite=Lax`;
 
 			//リダイレクトする
 			const redirect_select = url_param_parser(window.location.search)["rd"];

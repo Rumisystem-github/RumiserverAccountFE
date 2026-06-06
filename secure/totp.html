@@ -68,6 +68,8 @@
 
 			if (result.TOTP) {
 				mel.done.parent.style.display = "block";
+
+				if (window.parent.__ipc != null) window.parent.__ipc("TOTP_OK");
 			} else {
 				mel.none.parent.style.display = "block";
 			}
@@ -127,6 +129,8 @@
 			});
 			const result = await ajax.json();
 			if (result.STATUS) {
+				if (window.parent.__ipc != null) window.parent.__ipc("TOTP_OK");
+
 				window.location.reload();
 			} else {
 				dialog.DIALOG("エラー！");

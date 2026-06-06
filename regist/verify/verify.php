@@ -47,7 +47,7 @@ try {
 				$ID = GenSnowFlake();
 
 				$SQL_RESULT = SQL_RUN($PDO, "INSERT INTO `ACCOUNT` (`ID`, `UID`, `NAME`, `DESCRIPTION`, `PASS`, `PASS_TYPE`, `REGIST_DATE`, `OFFICIAL`, `SEX`, `LOCATION`, `LANGUAGE`, `BIRTHDAY`, `STATUS`, `PARENT_ID`, `TOTP_KEY`) VALUES 
-					(:ID, :UID, :NAME, '説明を入力してね', :PASS, :PASS_TYPE, :REGIST_DATE, 0, 'NEUT', '地球', 'JP', :BIRTHDAY, 0, NULL, NULL);",
+					(:ID, :UID, :NAME, '説明を入力してね', :PASS, :PASS_TYPE, :REGIST_DATE, 0, 'NONE', '地球', 'JP', :BIRTHDAY, 0, NULL, NULL);",
 					array(
 						array(
 							"KEY" => "ID",
