@@ -39,7 +39,7 @@
 			if (RESULT.STATUS) {
 				await dialog.DIALOG("成功しました！ログインをしてください！<BR>(ログイン後、自動的に初期設定画面に移行します)");
 
-				window.location.href = "https://account.rumiserver.com/Login?rd=welcome";
+				window.location.href = "https://account.rumiserver.com/login?rd=welcome";
 			} else {
 				await dialog.DIALOG("失敗しました、、、\n" + RESULT.ERR + "\n" + RESULT.EX);
 			}

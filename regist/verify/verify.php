@@ -1,8 +1,8 @@
 <?php
 try {
-	require("http://plain-cdn.rumia.me/LIB/SQL.php?V=LATEST");
-	require("http://plain-cdn.rumia.me/LIB/SnowFlake.php?V=LATEST");
-	require("http://plain-cdn.rumia.me/LIB/DISCORD.php?V=LATEST");
+	require("https://cdn.rumia.me/LIB/SQL.php?V=LATEST");
+	require("https://cdn.rumia.me/LIB/SnowFlake.php?V=LATEST");
+	require("https://cdn.rumia.me/LIB/DISCORD.php?V=LATEST");
 
 	//JSONを名乗る
 	header("Content-Type: application/json");
