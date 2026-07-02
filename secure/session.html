@@ -5,8 +5,11 @@
 
 		<STYLE>
 			.SESSION_ITEM{
-				margin: 10;
+				margin: 10px;
 				padding: 10px;
+
+				width: 100%;
+				max-width: 500px;
 
 				border: double 3px;
 			}
@@ -19,6 +22,7 @@
 	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
 	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
 	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/DateFormat.js"></SCRIPT>
 	<SCRIPT SRC="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></SCRIPT>
 	<SCRIPT SRC="Script/Main.js" defer></SCRIPT>
 	<SCRIPT defer>
@@ -38,6 +42,7 @@
 
 			for (let i = 0; i < result.LIST.length; i++) {
 				const row = result.LIST[i];
+
 				let item = document.createElement("DIV");
 				item.className = "SESSION_ITEM";
 				mel.session_list.appendChild(item);
@@ -59,11 +64,11 @@
 				item.appendChild(date_field);
 
 				let date = document.createElement("DIV");
-				date.innerText = row.DATE;
+				date.innerText = "ログインした日: " + date_format(new Date(row.DATE));
 				date_field.appendChild(date);
 
 				let update = document.createElement("DIV");
-				update.innerText = row.UPDATE;
+				update.innerText = "最後に使った日: " + date_format(new Date(row.UPDATE));
 				date_field.appendChild(update);
 
 				let controle_field = document.createElement("DIV");

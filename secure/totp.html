@@ -2,10 +2,21 @@
 <HTML>
 	<HEAD>
 		<TITLE>二段階認証</TITLE>
+
+		<STYLE>
+			.TOTP_SETTING_STATUS{
+				padding: 10px;
+				width: fit-content;
+			}
+
+			button{
+				margin-top: 10px;
+			}
+		</STYLE>
 	</HEAD>
 	<BODY>
 		<DIV ID="TOTP_NONE" STYLE="display: none;">
-			<DIV STYLE="background-color: rgb(255, 0, 0);">二段階認証が設定されていません。</DIV>
+			<DIV CLASS="TOTP_SETTING_STATUS" STYLE="background-color: rgb(255, 0, 0);">二段階認証が設定されていません。</DIV>
 			<BUTTON onclick="setup_start();">設定する</BUTTON>
 
 			<DIV ID="TOTP_NEW" STYLE="display: none;">
@@ -23,7 +34,7 @@
 			</DIV>
 		</DIV>
 		<DIV ID="TOTP_DONE" STYLE="display: none;">
-			<DIV STYLE="background-color: rgb(0, 255, 0);">二段階認証は設定済みです！</DIV>
+			<DIV CLASS="TOTP_SETTING_STATUS" STYLE="background-color: rgb(0, 255, 0);">二段階認証は設定済みです！</DIV>
 
 			<BUTTON onclick="remove_totp();"><FONT COLOR="RED">削除する</FONT></BUTTON>
 		</DIV>
