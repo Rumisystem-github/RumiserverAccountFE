@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>るみさーばーアカウントの削除</TITLE>
+
+		<STYLE>
+			.TOTP_SETTING_STATUS{
+				padding: 10px;
+				width: fit-content;
+			}
+
+			button{
+				margin-top: 10px;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<H1>るみさーばーアカウントの削除</H1>
+		削除したら基本的に戻せません。<BR>
+		毎月1日に物理削除を行うため、その前に問い合わせれば戻せますが、めんどうくさいのでやめてね。<BR>
+		あとDBが汚れるので一度消したら二度と作り直さないでください(サブ垢は別)<BR>
+		<BR>
+		<BUTTON>やっぱやめる</BUTTON><BR>
+		<BUTTON onclick="go();">アカウントを削除する</BUTTON>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="Script/Main.js" defer></SCRIPT>
+	<SCRIPT defer>
+		async function __ready() {}
+
+		async function go() {
+			if (await dialog.INPUT("マジで消しますか？", {TYPE:"NONE"}) == null) return;
+			if (await dialog.INPUT("二度と戻せませんよ？後悔しませんね？", {TYPE:"NONE"}) == null) return;
+
+			document.body.replaceChildren();
+			document.body.innerText = "お待ち下さい。";
+
+			let ajax = await fetch("/api/User", {
+				method: "DELETE",
+				headers: {
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				}
+			});
+
+			const result = await ajax.json();
+			if (result.STATUS) {
+				dialog.DIALOG("削除しました。");
+				window.location.href = "https://u.ae/";
+			} else {
+				dialog.DIALOG("エラー！");
+			}
+		}
+	</SCRIPT>
+</HTML>
