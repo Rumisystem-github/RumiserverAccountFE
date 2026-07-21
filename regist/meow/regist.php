@@ -3,7 +3,7 @@
 require(__DIR__."/PHPMailer/PHPMailer.php");
 require(__DIR__."/PHPMailer/Exception.php");
 require(__DIR__."/PHPMailer/SMTP.php");
-use PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\PHPMailer;
 
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
 	error_return("0x4000", "メソッドが異常です。", __LINE__);

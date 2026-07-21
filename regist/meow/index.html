@@ -288,7 +288,7 @@
 				mel.readme_page.parent.dataset["close"] = "true";
 				mel.end_page.parent.dataset["close"] = "false";
 			} else {
-				dialog.DIALOG("問題が発生しちゃいました...\n" + JSON.stringify(result.EX));
+				dialog.DIALOG(`問題が発生しちゃいました...\n[${result.ERROR.CODE}] ${result.ERROR.MESSAGE}\n${result.ERROR.TRACE}`);
 			}
 		}
 	</SCRIPT>

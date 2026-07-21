@@ -46,8 +46,8 @@ try {
 				$REGIST_DATA = json_decode($SQL_RESULT["RESULT"][0]["REGIST_DATA"], true);
 				$ID = GenSnowFlake();
 
-				$SQL_RESULT = SQL_RUN($PDO, "INSERT INTO `ACCOUNT` (`ID`, `UID`, `NAME`, `DESCRIPTION`, `PASS`, `PASS_TYPE`, `REGIST_DATE`, `OFFICIAL`, `SEX`, `LOCATION`, `LANGUAGE`, `BIRTHDAY`, `STATUS`, `PARENT_ID`, `TOTP_KEY`) VALUES 
-					(:ID, :UID, :NAME, '説明を入力してね', :PASS, :PASS_TYPE, :REGIST_DATE, 0, 'NONE', '地球', 'JP', :BIRTHDAY, 0, NULL, NULL);",
+				$SQL_RESULT = SQL_RUN($PDO, "INSERT INTO `ACCOUNT` (`ID`, `UID`, `NAME`, `DESCRIPTION`, `REGIST_DATE`, `OFFICIAL`, `SEX`, `LOCATION`, `LANGUAGE`, `BIRTHDAY`, `STATUS`, `PARENT_ID`) VALUES 
+					(:ID, :UID, :NAME, '説明を入力してね', :REGIST_DATE, 0, 'NONE', '地球', 'JP', :BIRTHDAY, 0, NULL);",
 					array(
 						array(
 							"KEY" => "ID",
@@ -62,14 +62,6 @@ try {
 							"VAL" => $REGIST_DATA["NAME"]
 						),
 						array(
-							"KEY" => "PASS",
-							"VAL" => $REGIST_DATA["PASS"]
-						),
-						array(
-							"KEY" => "PASS_TYPE",
-							"VAL" => $REGIST_DATA["PASS_TYPE"]
-						),
-						array(
 							"KEY" => "REGIST_DATE",
 							"VAL" => $REGIST_DATA["REGIST_DATE"]
 						),
@@ -78,6 +70,23 @@ try {
 							"VAL" => $REGIST_DATA["TANZHOOBI"]
 						)
 					)
+				);
+
+				$AUTH_SQL_RESULT = SQL_RUN($PDO, "INSERT INTO `ACCOUNT_AUTH` (`USER`, `PASSWORD`, `PASSWORD_TYPE`, `TOTP_KEY`, `TOTP_IV`, `TOTP_TAG`) VALUES (:user, :password, :password_type, NULL, NULL, NULL);",
+					[
+						[
+							"KEY" => "user",
+							"VAL" => $ID
+						],
+						[
+							"KEY" => "password",
+							"VAL" => $REGIST_DATA["PASS"]
+						],
+						[
+							"KEY" => "password_type",
+							"VAL" => $REGIST_DATA["PASS_TYPE"]
+						]
+					]
 				);
 
 				//連絡情報を登録
@@ -101,7 +110,7 @@ try {
 				));
 
 				//登録できたか
-				if ($SQL_RESULT["STATUS"] && $MAIL_SQL_RESULT["STATUS"]) {
+				if ($SQL_RESULT["STATUS"] && $AUTH_SQL_RESULT["STATUS"] && $MAIL_SQL_RESULT["STATUS"]) {
 					//メール認証情報を削除
 					SQL_RUN($PDO, "DELETE FROM `MAIL_VERIFY` WHERE `ID` = BINARY :ID;", array(
 						array(
