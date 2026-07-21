@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>サブアカウント</TITLE>
+
+		<STYLE>
+			.SUBUSER_ITEM{
+				border: double 3px;
+
+				display: flex;
+				flex-direction: row;
+
+				margin-top: 10px;
+				padding: 10px;
+
+				align-items: center;
+			}
+
+			.SUBUSER_ITEM > img {
+				width: 45px;
+				height: 45px;
+			}
+
+			.SUBUSER_ITEM > span{
+				margin-left: 10px;
+
+				height: 1lh;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<H1>サブアカウント</H1>
+
+		<DIV>
+			<INPUT TYPE="text" ID="USER_UID" PLACEHOLDER="ユーザーID">
+			<INPUT TYPE="text" ID="USER_PASSWORD" PLACEHOLDER="パスワード">
+			<INPUT TYPE="date" ID="USER_BIRTHDAY" PLACEHOLDER="誕生日">
+			<BUTTON onclick="add();">+</BUTTON>
+		</DIV>
+
+		<DIV ID="SUBUSER_LIST" CLASS="SUBUSER_LIST"></DIV>
+	</BODY>
+
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/COOKIE.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/Login.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="https://cdn.rumia.me/LIB/DIALOG.js?V=LATEST"></SCRIPT>
+	<SCRIPT SRC="Script/Main.js" defer></SCRIPT>
+	<SCRIPT defer>
+		async function __ready() {
+			await refresh_subuser_list();
+		}
+
+		async function refresh_subuser_list() {
+			let ajax = await fetch("/api/User/Sub", {
+				method: "GET",
+				headers: {
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				}
+			});
+			const result = await ajax.json();
+
+			document.getElementById("SUBUSER_LIST").replaceChildren();
+
+			for (const user of result.LIST) {
+				let item = document.createElement("DIV");
+				item.className = "SUBUSER_ITEM";
+				item.dataset["ID"] = user.ID;
+				item.dataset["UID"] = user.UID;
+
+				let icon = document.createElement("IMG");
+				icon.src = user.ICON_RAW_URL;
+				item.append(icon);
+
+				let name = document.createElement("SPAN");
+				name.innerText = user.NAME;
+				item.append(name);
+
+				let uid = document.createElement("SPAN");
+				uid.innerText = `@${user.UID}`;
+				item.append(uid);
+
+				document.getElementById("SUBUSER_LIST").append(item);
+			}
+		}
+
+		async function add() {
+			let ajax = await fetch("/api/User/Sub", {
+				method: "POST",
+				headers: {
+					"TOKEN": session,
+					"Content-Type": "application/json; charset=UTF-8",
+					"Accept": "application/json; charset=UTF-8"
+				},
+				body: JSON.stringify(
+					{
+						"UID": document.getElementById("USER_UID").value,
+						"PASSWORD": document.getElementById("USER_PASSWORD").value,
+						"BIRTHDAY": document.getElementById("USER_BIRTHDAY").value
+					}
+				)
+			});
+			const result = await ajax.json();
+			if (result.STATUS == false) {
+				dialog.DIALOG("OK");
+				return;
+			}
+
+			document.getElementById("USER_UID").value = "";
+			document.getElementById("USER_PASSWORD").value = "";
+			document.getElementById("USER_BIRTHDAY").value = "";
+
+			await refresh_subuser_list();
+		}
+	</SCRIPT>
+</HTML>
