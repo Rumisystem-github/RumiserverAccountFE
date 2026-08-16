@@ -125,12 +125,12 @@ function change(PDO $pdo, string $session_id, string $user_id) {
 		$pdo->beginTransaction();
 
 		//UPDATE
-		$stmt = $pdo->prepare("UPDATE `ACCOUNT` SET `PASS` = :PASSWORD WHERE `ACCOUNT`.`ID` = :ID;");
+		$stmt = $pdo->prepare("UPDATE `ACCOUNT_AUTH` SET `PASSWORD` = :PASSWORD WHERE `USER` = :ID;");
 		$stmt->bindValue(":PASSWORD", $password_hash, PDO::PARAM_STR);
 		$stmt->bindValue(":ID", $user_id, PDO::PARAM_STR);
 		$stmt->execute();
 
-		$stmt = $pdo->prepare("UPDATE `ACCOUNT` SET `PASS_TYPE` = :TYPE WHERE `ACCOUNT`.`ID` = :ID;");
+		$stmt = $pdo->prepare("UPDATE `ACCOUNT_AUTH` SET `PASSWORD_TYPE` = :TYPE WHERE `USER` = :ID;");
 		$stmt->bindValue(":TYPE", $password_type, PDO::PARAM_STR);
 		$stmt->bindValue(":ID", $user_id, PDO::PARAM_STR);
 		$stmt->execute();
