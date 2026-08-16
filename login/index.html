@@ -66,6 +66,14 @@
 		let totp = null;
 
 		window.addEventListener("load", function() {
+			//スマホか？
+			const ua_check = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+			const touch_check = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 768;
+			if (ua_check || touch_check) {
+				window.location.href = "smartphone.html";
+				return;
+			}
+
 			init();
 		});
 
