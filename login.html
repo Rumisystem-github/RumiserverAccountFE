@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>ログイン</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+
+		<STYLE>
+			:root{
+				--PLATE_WIDHT: 300px;
+				--PLATE_HEIGHT: 120px;
+			}
+			
+			body{
+				width: 100vw;
+				height: 100vh;
+
+				background: var(--RSV_DEFAULT_BG);
+			}
+
+			.PLATE{
+				display: flex;
+				flex-direction: column;
+
+				position: fixed;
+				top: calc(50vh - (var(--PLATE_HEIGHT) / 2));
+				left: 50px;
+
+				width: var(--PLATE_WIDHT);
+				height: var(--PLATE_HEIGHT);
+			}
+
+			.PLATE > div{
+				height: calc(var(--PLATE_HEIGHT) / 2);
+			}
+
+			.PLATE > .ERROR{
+				color: red;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<DIV CLASS="PLATE">
+			<DIV>ログイン</DIV>
+			<DIV CLASS="ERROR" ID="ERROR"></DIV>
+			<INPUT TYPE="text" ID="TEXT_BOX" PLACEHOLDER="お待ちください。">
+		</DIV>
+	</BODY>
+
+	<SCRIPT SRC="/src/login.ts" TYPE="module"></SCRIPT>
+</HTML>
