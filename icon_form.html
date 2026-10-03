@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<HTML>
+	<HEAD>
+		<TITLE>アイコン変更フォーム</TITLE>
+
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
+
+		<STYLE>
+			body{
+				margin: 10px;
+			}
+
+			.MAIN{
+				display: flex;
+
+				background-color: white;
+
+				padding: 10px;
+				box-sizing: border-box;
+			}
+
+			.DISPLAY{
+				width: 256px;
+				height: 256px;
+
+				border: solid 1px;
+
+				background-color: white;
+			}
+
+			.CONTROLE{
+				margin-left: 10px;
+			}
+
+			.INPUT_FIELD{
+				display: flex;
+				flex-direction: row;
+			}
+
+			.INPUT_FIELD > span{
+				width: 1em;
+				text-align: center;
+			}
+
+			.INPUT_FIELD > input{
+				width: 320px;
+			}
+		</STYLE>
+	</HEAD>
+	<BODY>
+		<DIV CLASS="WAIT" ID="WAIT">
+			お待ち下さい...
+		</DIV>
+		<DIV CLASS="MAIN" ID="MAIN" STYLE="display: none;">
+			<CANVAS CLASS="DISPLAY" ID="DISPLAY"></CANVAS>
+
+			<DIV CLASS="CONTROLE">
+				<DIV>
+					<INPUT ID="INPUT_FILE" TYPE="FILE">
+				</DIV>
+				<DIV>
+					<BUTTON ID="RESET_BTN">リセット</BUTTON>
+					<INPUT TYPE="CHECKBOX" ID="INPUT_GUIDE" checked> <LABEL FOR="INPUT_GUIDE">ガイドを表示</LABEL>
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>X</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_X" VALUE="0">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>Y</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_Y" VALUE="0">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>W</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_W" VALUE="0">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<SPAN>H</SPAN>
+					<INPUT TYPE="NUMBER" ID="INPUT_H" VALUE="0">
+				</DIV>
+				<DIV CLASS="INPUT_FIELD">
+					<BUTTON ID="APPLY_BTN">適用</BUTTON>
+				</DIV>
+			</DIV>
+		</DIV>
+	</BODY>
+	<SCRIPT SRC="/src/icon_form.ts" TYPE="module"></SCRIPT>
+</HTML>
