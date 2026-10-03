@@ -18,17 +18,24 @@
  * @return x y w hの順です。
  */
 export function wheel_zoom(delta_y: number, x: number, y: number, w: number, h: number, image_width: number, image_height: number, target_width: number, target_height: number): number[] {
-	const zoom_bairicu = (delta_y / 4) * -1;
+	//ズーム範囲
+	const min_w = image_width * 0.05;
+	const max_w = image_width * 50;
 
+	//指数ズーム
+	const zoom_bairicu = Math.exp(-delta_y * 0.001);
+	const new_w = Math.min(max_w, Math.max(min_w, w * zoom_bairicu));
+	const new_h = new_w * (image_height / image_width);
+
+	//クランプ
+	const scale_x = new_w / w;
+	const scale_y = new_h / h;
+
+	//画面の中心でズームさせる
 	const target_x = target_width / 2;
 	const target_y = target_height / 2;
-	const target_soutai_x = (target_x - x) / w;
-	const target_soutai_y = (target_y - y) / h;
-
-	const new_w = w + zoom_bairicu;
-	const new_h = aspect_calc(new_w, image_width, image_height);
-	const new_x = target_x - (target_soutai_x * new_w);
-	const new_y = target_y - (target_soutai_y * new_h);
+	const new_x = target_x - (target_x - x) * scale_x;
+	const new_y = target_y - (target_y - y) * scale_y;
 
 	return [
 		Math.floor(new_x),
