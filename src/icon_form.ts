@@ -1,4 +1,5 @@
-import { get_token, get_user, init } from "./main";
+import { get_token, init } from "./main";
+import { aspect_calc, export_image_binary, preview_draw, wheel_zoom } from "./Tool/IconHeaderForm";
 
 const TARGET_WIDTH = 256;
 const TARGET_HEIGHT = 256;
@@ -98,27 +99,17 @@ mel.display.addEventListener("mousemove", (e)=>{
 
 //ホイール
 mel.display.addEventListener("wheel", (e)=>{
-	const zoom_bairicu = (e.deltaY / 4) * -1;
-
 	const x = Number.parseInt(mel.controle.x.value);
 	const y = Number.parseInt(mel.controle.y.value);
 	const w = Number.parseInt(mel.controle.w.value);
 	const h = Number.parseInt(mel.controle.h.value);
 
-	const target_x = TARGET_WIDTH / 2;
-	const target_y = TARGET_HEIGHT / 2;
-	const target_soutai_x = (target_x - x) / w;
-	const target_soutai_y = (target_y - y) / h;
+	const zoom_result = wheel_zoom(e.deltaY, x, y, w, h, image.width, image.height, TARGET_WIDTH, TARGET_HEIGHT);
 
-	const new_w = w + zoom_bairicu;
-	const new_h = icon_hiricu_calc(image.width, image.height, new_w);
-	const new_x = target_x - (target_soutai_x * new_w);
-	const new_y = target_y - (target_soutai_y * new_h);
-
-	mel.controle.x.value = Math.floor(new_x).toString();
-	mel.controle.y.value = Math.floor(new_y).toString();
-	mel.controle.w.value = Math.floor(new_w).toString();
-	mel.controle.h.value = Math.floor(new_h).toString();
+	mel.controle.x.value = zoom_result[0].toString();
+	mel.controle.y.value = zoom_result[1].toString();
+	mel.controle.w.value = zoom_result[2].toString();
+	mel.controle.h.value = zoom_result[3].toString();
 
 	draw();
 });
@@ -147,7 +138,7 @@ function reset() {
 	//const aspect_ratio = original_width / original_height;
 
 	const new_width = Number.parseInt(mel.controle.w.value);
-	const new_height = icon_hiricu_calc(original_width, original_height, new_width);
+	const new_height = aspect_calc(new_width, original_width, original_height);
 	const new_x = Number.parseInt(mel.controle.x.value);
 	const new_y = Math.floor((TARGET_WIDTH - new_height) / 2);
 
@@ -157,61 +148,23 @@ function reset() {
 	mel.controle.h.value = new_height.toString();
 }
 
-//比率を計算して高さを出す
-function icon_hiricu_calc(original_w: number, original_h: number, target_w: number) {
-	return Math.floor(target_w / (original_w / original_h));
-}
-
 //描画
 function draw() {
-	mel.ctx.clearRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-
 	const x = Number.parseInt(mel.controle.x.value);
 	const y = Number.parseInt(mel.controle.y.value);
 	const w = Number.parseInt(mel.controle.w.value);
 	const h = Number.parseInt(mel.controle.h.value);
 
-	//画像を描画
-	mel.ctx.drawImage(image, x, y, w, h);
-
-	if (mel.controle.draw_guide.checked) {
-		//画像のガイド
-		mel.ctx.strokeStyle = "red";
-		mel.ctx.strokeRect(x - 1, y - 1, w + 1, h + 1);
-
-		//キャンバスの中央
-		mel.ctx.strokeStyle = "black";
-		mel.ctx.lineWidth = 1;
-		mel.ctx.beginPath();
-		mel.ctx.moveTo(TARGET_WIDTH / 2, 0);
-		mel.ctx.lineTo(TARGET_WIDTH / 2, TARGET_HEIGHT);
-		mel.ctx.moveTo(0, TARGET_HEIGHT / 2);
-		mel.ctx.lineTo(TARGET_WIDTH, TARGET_HEIGHT / 2);
-		mel.ctx.stroke();
-	}
+	preview_draw(mel.ctx, x, y, w, h, mel.controle.draw_guide.checked, TARGET_WIDTH, TARGET_HEIGHT, image)
 }
 
 //適用
 async function apply() {
-	//描画
 	const x = Number.parseInt(mel.controle.x.value);
 	const y = Number.parseInt(mel.controle.y.value);
 	const w = Number.parseInt(mel.controle.w.value);
 	const h = Number.parseInt(mel.controle.h.value);
-	mel.ctx.fillStyle = "white";
-	mel.ctx.fillRect(0, 0, TARGET_WIDTH, TARGET_HEIGHT);
-	mel.ctx.drawImage(image, x, y, w, h);
-
-	//ロード
-	const data_url = mel.display.toDataURL();
-	const base64_data = data_url.split(",")[1];
-	const binary_data = atob(base64_data);
-
-	//バイト配列に変換
-	const byte_array = new Uint8Array(binary_data.length);
-	for (let i = 0; i < binary_data.length; i++) {
-		byte_array[i] = binary_data.charCodeAt(i);
-	}
+	const binary = export_image_binary(x, y, w, h, TARGET_WIDTH, TARGET_HEIGHT, image);
 
 	let ajax = await fetch("/api/Icon", {
 		method: "PATCH",
@@ -219,7 +172,7 @@ async function apply() {
 			TOKEN: get_token(),
 			"Accept": "application/xml"
 		},
-		body: byte_array
+		body: binary
 	});
 	const result = await ajax.text();
 
