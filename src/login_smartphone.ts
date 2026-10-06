@@ -10,18 +10,19 @@ const redirect_table: Record<string, string> = {
 
 let mel = {
 	text_box: document.getElementById("TEXT_BOX")! as HTMLInputElement,
-	error: document.getElementById("ERROR")! as HTMLDivElement
+	error: document.getElementById("ERROR")! as HTMLDivElement,
+	next_button: document.getElementById("NEXT_BUTTON")! as HTMLButtonElement
 };
 let user_id: string|null = null;
 let password: string|null = null;
 let totp: string|null = null;
 
 window.addEventListener("load", function() {
-	//スマホか？
+	//PCか？
 	const ua_check = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 	const touch_check = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 768;
-	if (ua_check || touch_check) {
-		window.location.href = "login_smartphone.html";
+	if (!(ua_check || touch_check)) {
+		window.location.href = "login.html";
 		return;
 	}
 
@@ -38,10 +39,8 @@ function init() {
 
 	change_prompt("ユーザーID");
 	mel.text_box.name = "username";
-	mel.text_box.onkeydown = function(e) {
-		if (e.key === "Enter") {
-			userid_done();
-		}
+	mel.next_button.onclick = function() {
+		userid_done();
 	};
 }
 
@@ -55,10 +54,8 @@ function userid_done() {
 	change_prompt("パスワード");
 	mel.text_box.type = "password";
 	mel.text_box.name = "password";
-	mel.text_box.onkeydown = function(e) {
-		if (e.key === "Enter") {
-			password_done();
-		}
+	mel.next_button.onclick = function() {
+		password_done();
 	};
 }
 
@@ -75,7 +72,7 @@ async function login() {
 	change_prompt("お待ちください。");
 	mel.text_box.type = "text";
 	mel.text_box.name = "wait";
-	mel.text_box.onkeydown = null;
+	mel.next_button.onclick = null;
 	mel.text_box.disabled = true;
 
 	const xml_builder = new XMLBuilder({ ignoreAttributes: false, format: true, suppressEmptyNode: true });
@@ -127,11 +124,9 @@ async function login() {
 			case "TOTP": {
 				change_prompt("二段階認証");
 				mel.text_box.disabled = false;
-				mel.text_box.onkeydown = function(e) {
-					if (e.key === "Enter") {
-						totp = mel.text_box.value;
-						login();
-					}
+				mel.next_button.onclick = function() {
+					totp = mel.text_box.value;
+					login();
 				};
 				return;
 			}
