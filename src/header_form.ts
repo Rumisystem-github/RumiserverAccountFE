@@ -99,6 +99,8 @@ mel.display.addEventListener("mousemove", (e)=>{
 
 //ホイール
 mel.display.addEventListener("wheel", (e)=>{
+	e.preventDefault();
+
 	const x = Number.parseInt(mel.controle.x.value);
 	const y = Number.parseInt(mel.controle.y.value);
 	const w = Number.parseInt(mel.controle.w.value);
