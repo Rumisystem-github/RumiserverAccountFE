@@ -9,6 +9,7 @@ export type User = {
 	REGIST_AT: string,
 	LASTUSE_AT: string,
 	ICON_URL: string,
+	HEADER_URL: string,
 	SUB: boolean,
 	STATUS: number
 };

@@ -5,31 +5,40 @@
 
 		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/reset.css">
 		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/DEFAULT.css">
+		<LINK REL="stylesheet" HREF="https://cdn.rumia.me/CSS/font.css">
 
-		<STYLE>
-			.ICON_EDITOR{
-				z-index: 12;
-
-				width: 650px;
-				height: 350px;
-
-				padding: 0px;
-			}
-
-			.ICON_EDITOR > iframe{
-				width: 100%;
-				height: 100%;
-
-				border: none;
-			}
-		</STYLE>
+		<LINK REL="stylesheet" HREF="/public/Style/dashboard.css">
 	</HEAD>
 	<BODY>
-		<IMG ID="USER_ICON">
+		<DIV CLASS="PLATE">
+			<BUTTON>うに</BUTTON>
+			<BUTTON>うに</BUTTON>
+			<BUTTON>うに</BUTTON>
+			<BUTTON>うに</BUTTON>
+			<BUTTON>かに</BUTTON>
+		</DIV>
+
+		<DIV CLASS="PLATE USER">
+			ダブルクリックすると編集できます。<BR>
+
+			<IMG CLASS="HEADER" ID="USER_HEADER">
+			<DIV>
+				<IMG CLASS="ICON" ID="USER_ICON">
+				<SPAN CLASS="NAME" ID="USER_NAME"></SPAN>
+				<DIV CLASS="DESCRIPTION" ID="USER_DESCRIPTION"></DIV>
+			</DIV>
+		</DIV>
 
 		<!--アイコン編集画面-->
-		<DIV CLASS="PLATE PLATE_CENTER ICON_EDITOR" ID="ICON_EDITOR" STYLE="display: none;">
+		<DIV CLASS="DIALOG_BG" ID="ICON_EDITOR_BG" STYLE="display: none;"></DIV>
+		<DIV CLASS="PLATE PLATE_CENTER EDITOR ICON_EDITOR" ID="ICON_EDITOR" STYLE="display: none;">
 			<IFRAME SRC="/icon_form.html"></IFRAME>
+		</DIV>
+
+		<!--ヘッダー編集画面-->
+		<DIV CLASS="DIALOG_BG" ID="HEADER_EDITOR_BG" STYLE="display: none;"></DIV>
+		<DIV CLASS="PLATE PLATE_CENTER EDITOR HEADER_EDITOR" ID="HEADER_EDITOR" STYLE="display: none;">
+			<IFRAME SRC="/header_form.html"></IFRAME>
 		</DIV>
 	</BODY>
 	<SCRIPT SRC="/src/dashboard.ts" TYPE="module"></SCRIPT>
